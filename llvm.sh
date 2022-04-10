@@ -22,16 +22,6 @@ function get_attached_val() {
     echo $VAL
 }
 
-function get_version_codename() {
-    local CODENAME=`cat /etc/os-release | grep VERSION_CODENAME`
-    echo ${CODENAME#*=}
-}
-
-function get_ubuntu_codename() {
-    local CODENAME=`cat /etc/os-release | grep UBUNTU_CODENAME`
-    echo ${CODENAME#*=}
-}
-
 function parse_args() {
     # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash/14203146#14203146
     POSITIONAL_ARGS=()
@@ -126,6 +116,7 @@ LLVM_VERSION_STRING=${LLVM_VERSION_PATTERNS[$LLVM_VERSION]}
 DISTRO=`lsb_release -is`
 VERSION=`lsb_release -sr`
 
+source /etc/os-release
 DISTRO=${DISTRO,,}
 case $DISTRO in
     debian)
@@ -133,13 +124,13 @@ case $DISTRO in
             CODENAME=unstable
             LINKNAME=
         else
-            CODENAME=`get_version_codename`
+            CODENAME=$VERSION_CODENAME
             LINKNAME=-$CODENAME
         fi
         ;;
     *)
         if [[ -n `uname -v | grep -i ubuntu` ]]; then
-            CODENAME=`get_ubuntu_codename`
+            CODENAME=$UBUNTU_CODENAME
             if [[ -n "$CODENAME" ]]; then
                 LINKNAME=-$CODENAME
             fi

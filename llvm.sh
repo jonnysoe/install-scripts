@@ -140,6 +140,10 @@ esac
 
 if [[ -n "$CODENAME" ]]; then
     REPO_NAME="deb http://apt.llvm.org/${CODENAME}/  llvm-toolchain${LINKNAME}${LLVM_VERSION_STRING} main"
+    
+    if ! command -v curl &> /dev/null; then
+        sudo apt install -y curl
+    fi
 
     if ! curl --head --silent --fail http://apt.llvm.org/${CODENAME} &> /dev/null; then
         echo "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})."
@@ -159,4 +163,4 @@ if [[ $ALL -eq 1 ]]; then
     # No worries if we have dups
     PKG="$PKG clang-tidy-$LLVM_VERSION clang-format-$LLVM_VERSION clang-tools-$LLVM_VERSION llvm-$LLVM_VERSION-dev lld-$LLVM_VERSION lldb-$LLVM_VERSION llvm-$LLVM_VERSION-tools libomp-$LLVM_VERSION-dev libc++-$LLVM_VERSION-dev libc++abi-$LLVM_VERSION-dev libclang-common-$LLVM_VERSION-dev libclang-$LLVM_VERSION-dev libclang-cpp$LLVM_VERSION-dev libunwind-$LLVM_VERSION-dev"
 fi
-sudo apt-get install -y $PKG
+sudo apt install -y $PKG

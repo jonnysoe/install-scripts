@@ -164,3 +164,12 @@ if [[ $ALL -eq 1 ]]; then
     PKG="$PKG clang-tidy-$LLVM_VERSION clang-format-$LLVM_VERSION clang-tools-$LLVM_VERSION llvm-$LLVM_VERSION-dev lld-$LLVM_VERSION lldb-$LLVM_VERSION llvm-$LLVM_VERSION-tools libomp-$LLVM_VERSION-dev libc++-$LLVM_VERSION-dev libc++abi-$LLVM_VERSION-dev libclang-common-$LLVM_VERSION-dev libclang-$LLVM_VERSION-dev libclang-cpp$LLVM_VERSION-dev libunwind-$LLVM_VERSION-dev"
 fi
 sudo apt install -y $PKG
+
+# Add symbolic link(s)
+if [[ -f /usr/lib/llvm-$LLVM_VERSION/bin/clang-format ]]; then
+    if [[ ! -f /usr/bin/clang-format ]]; then
+        # Add clang-format to be executable globally
+        # NOTE: this will NOT replace clang-format that was installed from APT
+        sudo ln -s /usr/lib/llvm-$LLVM_VERSION/bin/clang-format /usr/bin/clang-format
+    fi
+fi

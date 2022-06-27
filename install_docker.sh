@@ -52,7 +52,7 @@ newgrp docker
 # Reclaim ownership of docker subdirectory if ran erroneously in an earlier installation
 if [[ -d ~/.docker ]]; then
     sudo chown -R `whoami`:`whoami` ~/.docker
-    sudo chmod -R ~/.docker
+    sudo chmod -R g+rwx ~/.docker
 fi
 
 # Allow RW for docker socket if ran erroneously in an earlier installation

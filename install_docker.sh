@@ -33,6 +33,9 @@ fi
 sudo mkdir -p /etc/apt/trusted.gpg.d/
 
 if [[ -z "`apt-key list | grep -i docker`" ]]; then
+    if ! command -v curl &> /dev/null; then
+        sudo apt install -y curl
+    fi
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg
 fi
 

@@ -58,7 +58,10 @@ if [[ -d ~/.docker ]]; then
     sudo chmod -R g+rwx ~/.docker
 fi
 
-# Allow RW for docker socket if ran erroneously in an earlier installation
-if [[ -e /var/run/docker.sock ]]; then
+# Run something docker-related to initialize its socket and ignore output (most likely RW error anyway)
+docker images >/dev/null
+
+# Allow RW for docker socket
+if [[ -f /var/run/docker.sock ]]; then
     sudo chmod a+rw /var/run/docker.sock
 fi

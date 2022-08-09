@@ -50,7 +50,8 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 # https://docs.docker.com/engine/install/linux-postinstall/
 sudo groupadd docker 2>/dev/null
 sudo usermod -aG docker `whoami`
-newgrp docker
+# commented out because this command is not useful in a script
+# newgrp docker
 
 # Reclaim ownership of docker subdirectory if ran erroneously in an earlier installation
 if [[ -d ~/.docker ]]; then
@@ -59,9 +60,9 @@ if [[ -d ~/.docker ]]; then
 fi
 
 # Run something docker-related to initialize its socket and ignore output (most likely RW error anyway)
-docker images >/dev/null
+docker images
 
 # Allow RW for docker socket
-if [[ -f /var/run/docker.sock ]]; then
+if [[ -e /var/run/docker.sock ]]; then
     sudo chmod a+rw /var/run/docker.sock
 fi

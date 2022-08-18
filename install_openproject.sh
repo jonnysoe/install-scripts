@@ -35,6 +35,7 @@ fi
 if [[ -z "`getent group sudo | cut -d: -f4 | grep \`whoami\``" ]]; then
     # Debian does not allow sudo by non-sudoer
     echo "Installation can only be done by sudoer!"
+    exit 2
 fi
 
 if ! command -v docker &> /dev/null; then

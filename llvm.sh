@@ -131,9 +131,7 @@ case $DISTRO in
     *)
         if [[ -n "$UBUNTU_CODENAME" ]]; then
             CODENAME=$UBUNTU_CODENAME
-            if [[ -n "$CODENAME" ]]; then
-                LINKNAME=-$CODENAME
-            fi
+            LINKNAME=-$CODENAME
         fi
         ;;
 esac

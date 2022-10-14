@@ -129,7 +129,7 @@ case $DISTRO in
         fi
         ;;
     *)
-        if [[ -n `uname -v | grep -i ubuntu` ]]; then
+        if [[ -n "$UBUNTU_CODENAME" ]]; then
             CODENAME=$UBUNTU_CODENAME
             if [[ -n "$CODENAME" ]]; then
                 LINKNAME=-$CODENAME

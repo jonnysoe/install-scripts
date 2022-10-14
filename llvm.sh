@@ -146,14 +146,22 @@ if [[ -n "$CODENAME" ]]; then
     fi
 
     if ! curl --head --silent --fail http://apt.llvm.org/${CODENAME} &> /dev/null; then
-        echo "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})."
-        exit 2
+        # Clear CODENAME to exit as error
+        CODENAME=
     fi
+fi
+
+if [[ -z "$CODENAME" ]]; then
+    echo "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})."
+    exit 2
 fi
 
 # install everything
 if [[ -z "`apt-key list | grep -i llvm`" ]]; then
     wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+fi  
+if ! command -v add-apt-repository &> /dev/null; then
+    sudo apt install -y software-properties-common
 fi
 sudo add-apt-repository -y "${REPO_NAME}"
 apt-get update

@@ -3,6 +3,8 @@
 function add_path() {
     local PATH_NAME=${1}
     local PATH_STRING=${2}
+    # Indirect parameter expansion to test out environment variable passed in by caller.
+    # https://stackoverflow.com/a/1921337/19336104
     if [[ -z ${!PATH_NAME} ]]; then
         # Reference: https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/
         if [[ ! -f /etc/profile.d/custom.sh ]] || \

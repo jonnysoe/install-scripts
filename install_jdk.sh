@@ -1,4 +1,19 @@
-#!/bin/sh
+#!/bin/bash
+
+function add_path() {
+    local PATH_NAME=${1}
+    local PATH_STRING=${2}
+    if [[ -z ${!PATH_NAME} ]]; then
+        # Reference: https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/
+        if [[ ! -f /etc/profile.d/custom.sh ]] || \
+            [[ "`grep ${PATH_NAME} /etc/profile.d/custom.sh`" != "${PATH_STRING}" ]]
+        then
+            local LINE="export ${PATH_NAME}=${PATH_STRING}"
+            sudo sh -c "echo $LINE >> /etc/profile.d/custom.sh"
+            echo "Appended ${PATH_NAME} to /etc/profile.d/custom.sh, restart to take effect."
+        fi
+    fi
+}
 
 function install_jdk() {
     # Install Amazon Corretto (OpenJDK)
@@ -13,18 +28,8 @@ function install_jdk() {
     fi
 
     # Make sure JAVA_HOME global environment variable is set
-    if [[ -z $JAVA_HOME ]]; then
-        # It should look like /usr/lib/jvm/java-1.8.0-amazon-corretto
-        # Reference: https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/
-        if [[ -z `cat /etc/profile.d/custom.sh | grep JAVA_HOME` ]]; then
-            CORRETTO_PATH=/usr/lib/jvm/`ls /usr/lib/jvm/ | grep corretto`
-            JAVA_HOME="export JAVA_HOME=$CORRETTO_PATH"
-            if [[ ! -f /etc/profile.d/custom.sh ]]; then
-                sudo touch /etc/profile.d/custom.sh
-            fi
-            sudo sh -c "echo $JAVA_HOME >> /etc/profile.d/custom.sh"
-        fi
-    fi
+    local CORRETTO_PATH=`find /usr/lib/jvm/ -maxdepth 1 -type d | grep corretto`
+    add_path JAVA_HOME ${CORRETTO_PATH}
 }
 
 install_jdk

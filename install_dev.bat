@@ -87,6 +87,9 @@ call %VSCODE_INSTALLER% /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextme
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:: Copy vscode to Quick Launch
+copy "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk" "%AppData%\Microsoft\Internet Explorer\Quick Launch\"
+
 :editSettings
 set VSCODE_SETTINGS_DIR=%APPDATA%\Code\User
 mkdir %VSCODE_SETTINGS_DIR% > nul 2>&1
@@ -202,6 +205,10 @@ call %CODE_FULLPATH% --force --install-extension Tobermory.es6-string-html
 :endInstall
 :: Delete VS Code Installer and ignore error
 del %VSCODE_INSTALLER% > nul 2>&1
+
+:: https://www.howtogeek.com/198815/use-this-secret-trick-to-close-and-restart-explorer.exe-in-windows/
+echo Restarting Windows Explorer to reload new configurations...
+taskkill /f /IM explorer.exe && start explorer
 
 echo Exiting Installation Script...
 exit /b %ERROR_RETURN%

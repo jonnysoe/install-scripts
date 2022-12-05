@@ -2,15 +2,20 @@
 
 set ERROR_RETURN=0
 
-@REM ===================================================================
-@REM Start of Git Installation
-@REM ===================================================================
+:: ===================================================================
+:: Start of Git Installation
+:: ===================================================================
 :checkGit
-rem Check for Git installation
+:: Check for Git installation
 where git > nul 2>&1
 
-rem No error, Git has been installed, so skip to install VS Code
+:: No error, Git has been installed, so skip to install VS Code
 if %ERRORLEVEL% equ 0 goto checkVscode
+
+set GIT_FULLPATH="C:\Program Files\Git\cmd\git.exe"
+
+:: git fullpath exists, git has been installed, so skip to install VS Code
+if exist %GIT_FULLPATH% goto checkVscode
 
 set GIT_INSTALLER=%USERPROFILE%\Downloads\GitSetup.exe
 
@@ -44,8 +49,8 @@ if %ERRORLEVEL% equ 0 goto installExtension
 
 set CODE_FULLPATH="C:\Program Files\Microsoft VS Code\bin\code"
 
-rem code fullpath exists, VS Code has been installed, so skip to install extention
-if exist %CODE_FULLPATH% equ 0 goto installExtension
+:: code fullpath exists, VS Code has been installed, so skip to install extention
+if exist %CODE_FULLPATH% goto installExtension
 
 set VSCODE_INSTALLER=%USERPROFILE%\Downloads\VSCodeSetup.exe
 

@@ -4,6 +4,13 @@ pushd %USERPROFILE%\Downloads
 
 set ERROR_RETURN=0
 
+:: Check if running as Administrator
+:: https://stackoverflow.com/a/11995662/19336104
+net session >nul 2>&1
+
+:: Fail if not running as Administrator
+if %ERRORLEVEL% neq 0 goto failAdmin
+
 :: Installer paths
 :: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
 set SZ_INSTALLER=7z.msi
@@ -374,4 +381,9 @@ exit /b %ERROR_RETURN%
 
 :failInstall
 set ERROR_RETURN=1
+goto endInstall
+
+:failAdmin
+echo Not running as administrator
+set ERROR_RETURN=21
 goto endInstall

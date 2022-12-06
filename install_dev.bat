@@ -88,8 +88,10 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkChrome
 
+set CHROME_EXE=%PROGRAMFILES%\Google\Chrome\Application\chrome.exe
+
 :: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%ARIA2_EXE%" goto checkGit
+if exist "%CHROME_EXE%" goto checkGit
 
 :: Skip to install if installer already exist
 if exist %CHROME_INSTALLER% goto installChrome
@@ -105,8 +107,7 @@ call %CHROME_INSTALLER% /silent /install
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-:: Copy vscode to Quick Launch
-copy "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk" "%AppData%\Microsoft\Internet Explorer\Quick Launch\"
+:: Chrome will install in the background, do not babysit it, move on
 
 :: ===================================================================
 :: Start of Git Installation

@@ -19,14 +19,14 @@ if exist %GIT_FULLPATH% goto checkVscode
 
 set GIT_INSTALLER=%USERPROFILE%\Downloads\GitSetup.exe
 
-rem Skip to install if installer already exist
+:: Skip to install if installer already exist
 if exist %GIT_INSTALLER% goto installGit
 
 :downloadGit
 echo Downloading Git...
 curl -L "https://github.com/git-for-windows/git/releases/download/v2.36.1.windows.1/Git-2.36.1-64-bit.exe" -o %GIT_INSTALLER%
 
-rem Fail if download fails
+:: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
 if not exist %GIT_INSTALLER% goto failInstall
 
@@ -34,17 +34,17 @@ if not exist %GIT_INSTALLER% goto failInstall
 echo Installing Git...
 call %GIT_INSTALLER% /VERYSILENT /NORESTART
 
-rem Fail if installation fails
+:: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-@REM ===================================================================
-@REM Start of VS Code Installation
-@REM ===================================================================
+:: ===================================================================
+:: Start of VS Code Installation
+:: ===================================================================
 :checkVscode
-rem Check for VS Code installation
+:: Check for VS Code installation
 where code > nul 2>&1
 
-rem No error, VS Code has been installed, so skip to install extention
+:: No error, VS Code has been installed, so skip to install extention
 if %ERRORLEVEL% equ 0 goto installExtension
 
 set CODE_FULLPATH="C:\Program Files\Microsoft VS Code\bin\code"
@@ -54,14 +54,14 @@ if exist %CODE_FULLPATH% goto installExtension
 
 set VSCODE_INSTALLER=%USERPROFILE%\Downloads\VSCodeSetup.exe
 
-rem Skip to install if installer already exist
+:: Skip to install if installer already exist
 if exist %VSCODE_INSTALLER% goto installVscode
 
 :downloadVscode
 echo Downloading VS Code...
 
-rem Detect OS architecture and download accordingly
-rem https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details
+:: Detect OS architecture and download accordingly
+:: https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details
 if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
 	curl -L "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64" -o %VSCODE_INSTALLER%
 ) else if /i %PROCESSOR_ARCHITECTURE%==x86 (
@@ -73,7 +73,7 @@ if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
 	goto failInstall
 )
 
-rem Fail if download fails
+:: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
 if not exist %VSCODE_INSTALLER% goto failInstall
 
@@ -96,8 +96,8 @@ mkdir %VSCODE_SETTINGS_DIR% > nul 2>&1
 
 set VSCODE_SETTINGS=%VSCODE_SETTINGS_DIR%\settings.json
 
+:: file doesn't exist, touch file
 if not exist %VSCODE_SETTINGS% (
-    rem file doesn't exist, touch file
     rem type nul > %VSCODE_SETTINGS%
     echo {
     echo     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
@@ -140,7 +140,7 @@ if not exist %VSCODE_SETTINGS% (
     echo }
 ) > %VSCODE_SETTINGS%
 
-rem ///@todo temporarily skip individual settings for now
+:: @todo temporarily skip individual settings for now
 goto installExtension
 
 >nul findstr /C:"workbench.editorAssociations" %VSCODE_SETTINGS% || (
@@ -152,7 +152,7 @@ goto installExtension
 )
 
 :installExtension
-rem No error exit, nothing is fatal here
+:: No error exit, nothing is fatal here
 
 :: GitLens for Git convenience
 call %CODE_FULLPATH% --force --install-extension eamodio.gitlens

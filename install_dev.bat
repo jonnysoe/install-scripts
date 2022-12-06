@@ -137,6 +137,32 @@ setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin"
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:: Install MinGW and dependencies for MSYS2
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git ninja pkgconf unzip"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "echo \"export PATH=$PATH:/mingw64/bin\" >> ~/.bashrc"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+echo Add SSH key, eg:
+echo https://github.com/settings/ssh/new
+echo https://gitlab.com/-/profile/keys
+echo ================================================================================
+set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "cat ~/.ssh/id_rsa.pub"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+echo ================================================================================
+
 :: ===================================================================
 :: Start of VS Code Installation
 :: ===================================================================

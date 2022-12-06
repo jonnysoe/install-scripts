@@ -8,6 +8,7 @@ set ERROR_RETURN=0
 :: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
 set SZ_INSTALLER=7z.msi
 set ARIA2_INSTALLER=aria2.zip
+set CHROME_INSTALLER=ChromeSetup.exe
 set GIT_INSTALLER=GitSetup.exe
 set VSCODE_INSTALLER=VSCodeSetup.exe
 set MSYS2_INSTALLER=msys2.exe
@@ -25,7 +26,7 @@ set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 :: ===================================================================
 :check7z
 
-:: 7z fullpath exists, 7z has been installed, so skip to install Git
+:: 7z fullpath exists, 7z has been installed, so skip
 if exist %SZ_EXE% goto checkAria2
 
 :: Skip to install if installer already exist
@@ -52,8 +53,8 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkAria2
 
-:: aria2 fullpath exists, aria2 has been installed, so skip to install Git
-if exist "%ARIA2_EXE%" goto checkGit
+:: aria2 fullpath exists, aria2 has been installed, so skip
+if exist "%ARIA2_EXE%" goto checkChrome
 
 :: Skip to install if installer already exist
 if exist %ARIA2_INSTALLER% goto installAria2
@@ -76,18 +77,43 @@ setx /m PATH "%PATH%;%ARIA2_FULLPATH%"
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: ===================================================================
+:: Start of Chrome Installation
+:: ===================================================================
+:checkChrome
+
+:: aria2 fullpath exists, aria2 has been installed, so skip
+if exist "%ARIA2_EXE%" goto checkGit
+
+:: Skip to install if installer already exist
+if exist %CHROME_INSTALLER% goto installChrome
+
+:downloadChrome
+echo Downloading Google Chrome...
+call "%ARIA2_EXE%" -o %CHROME_INSTALLER% "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B52B94939-B32C-7286-0CE9-69EEDAE2F130%7D%26lang%3Den%26browser%3D3%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-stable-statsdef_1%26installdataindex%3Dempty/chrome/install/ChromeStandaloneSetup64.exe"
+
+:installChrome
+:: https://silentinstallhq.com/google-chrome-exe-silent-install-how-to-guide/
+call %CHROME_INSTALLER% /silent /install
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Copy vscode to Quick Launch
+copy "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk" "%AppData%\Microsoft\Internet Explorer\Quick Launch\"
+
+:: ===================================================================
 :: Start of Git Installation
 :: ===================================================================
 :checkGit
 :: Check for Git installation
 where git > nul 2>&1
 
-:: No error, Git has been installed, so skip to install VS Code
+:: No error, Git has been installed, so skip
 if %ERRORLEVEL% equ 0 goto checkMsys2
 
 set GIT_FULLPATH="C:\Program Files\Git\cmd\git.exe"
 
-:: git fullpath exists, git has been installed, so skip to install VS Code
+:: git fullpath exists, git has been installed, so skip
 if exist %GIT_FULLPATH% goto checkMsys2
 
 :: Skip to install if installer already exist
@@ -114,7 +140,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :checkMsys2
 set MSYS2_FULLPATH="C:\msys64"
 
-:: MSYS2 fullpath exists, MSYS2 has been installed, so skip to install VS Code
+:: MSYS2 fullpath exists, MSYS2 has been installed, so skip
 if exist %MSYS2_FULLPATH% goto checkVscode
 
 :: Skip to install if installer already exist

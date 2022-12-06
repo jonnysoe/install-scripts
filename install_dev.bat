@@ -172,12 +172,17 @@ setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin"
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Install MinGW and dependencies for MSYS2
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git ninja pkgconf unzip"
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "echo \"export PATH=$PATH:/mingw64/bin\" >> ~/.bashrc"
+set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "ln -s /usr/lib/librt.a /mingw64/lib"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "echo \"export PATH=\$PATH:/mingw64/bin\" >> ~/.bashrc"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall

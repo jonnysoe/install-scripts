@@ -1,21 +1,24 @@
 @echo off
 
+pushd %USERPROFILE%\Downloads
+
 set ERROR_RETURN=0
 
 :: Installer paths
-set 7Z_INSTALLER=%USERPROFILE%\Downloads\7z.msi
-set ARIA2_INSTALLER=%USERPROFILE%\Downloads\aria2.zip
-set GIT_INSTALLER=%USERPROFILE%\Downloads\GitSetup.exe
-set VSCODE_INSTALLER=%USERPROFILE%\Downloads\VSCodeSetup.exe
-set MSYS2_INSTALLER=%USERPROFILE%\Downloads\msys2.exe
+:: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
+set SZ_INSTALLER=7z.msi
+set ARIA2_INSTALLER=aria2.zip
+set GIT_INSTALLER=GitSetup.exe
+set VSCODE_INSTALLER=VSCodeSetup.exe
+set MSYS2_INSTALLER=msys2.exe
 
 :: Common fullpaths
 :: fresh installation with registry update will no be reflected in current cmd session
 :: Rerunning this script will not have new PATH included
-set 7Z_FULLPATH="%PROGRAMFILES%\7-Zip"
-set ARIA2_FULLPATH="%PROGRAMFILES%\aria2"
-set 7Z_EXE="%7Z_FULLPATH%\7z.exe"
-set ARIA2_EXE="%ARIA2_FULLPATH%\aria2c.exe"
+set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
+set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
+set SZ_EXE=%SZ_FULLPATH%\7z.exe
+set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 
 :: ===================================================================
 :: Start of 7-Zip Installation
@@ -23,23 +26,23 @@ set ARIA2_EXE="%ARIA2_FULLPATH%\aria2c.exe"
 :check7z
 
 :: 7z fullpath exists, 7z has been installed, so skip to install Git
-if exist %7Z_EXE% goto checkAria2
+if exist %SZ_EXE% goto checkAria2
 
 :: Skip to install if installer already exist
-if exist %7Z_INSTALLER% goto install7z
+if exist %SZ_INSTALLER% goto install7z
 
 :download7z
 echo Downloading 7-Zip...
-curl -L -o %7Z_INSTALLER% "https://www.7-zip.org/a/7z2201-x64.msi"
+curl -L -o %SZ_INSTALLER% "https://www.7-zip.org/a/7z2201-x64.msi"
 
 :install7z
-MsiExec.exe /i %7Z_INSTALLER% /qn
+MsiExec.exe /i %SZ_INSTALLER% /qn
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add to PATH environment variable
-setx /m PATH "%PATH%;%7Z_FULLPATH%"
+setx /m PATH "%PATH%;%SZ_FULLPATH%"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -50,7 +53,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :checkAria2
 
 :: aria2 fullpath exists, aria2 has been installed, so skip to install Git
-if exist %ARIA2_EXE% goto checkGit
+if exist "%ARIA2_EXE%" goto checkGit
 
 :: Skip to install if installer already exist
 if exist %ARIA2_INSTALLER% goto installAria2
@@ -61,7 +64,7 @@ curl -L -o %ARIA2_INSTALLER% "https://github.com/aria2/aria2/releases/download/r
 
 :installAria2
 MsiExec.exe /i %ARIA2_INSTALLER% /qn
-call "%7Z_EXE%" e %ARIA2_INSTALLER% -o"%PROGRAMFILES%\aria2"
+call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%PROGRAMFILES%\aria2"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -92,7 +95,7 @@ if exist %GIT_INSTALLER% goto installGit
 
 :downloadGit
 echo Downloading Git...
-call %ARIA2_EXE% -o %GIT_INSTALLER% "https://github.com/git-for-windows/git/releases/download/v2.36.1.windows.1/Git-2.36.1-64-bit.exe"
+call "%ARIA2_EXE%" -o %GIT_INSTALLER% "https://github.com/git-for-windows/git/releases/download/v2.36.1.windows.1/Git-2.36.1-64-bit.exe"
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -158,11 +161,11 @@ echo Downloading VS Code...
 :: Detect OS architecture and download accordingly
 :: https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details
 if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
-	call %ARIA2_EXE% -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64"
+	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64"
 ) else if /i %PROCESSOR_ARCHITECTURE%==x86 (
-	call %ARIA2_EXE% -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32"
+	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32"
 ) else if /i %PROCESSOR_ARCHITECTURE%==ARM64 (
-	call %ARIA2_EXE% -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-arm64"
+	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-arm64"
 ) else (
 	rem unsupported architecture, eg. Intel Itanium
 	goto failInstall
@@ -302,7 +305,7 @@ call %CODE_FULLPATH% --force --install-extension Tobermory.es6-string-html
 :: ===================================================================
 :endInstall
 :: Delete Installers and ignore error
-del %7Z_INSTALLER% > nul 2>&1
+del %SZ_INSTALLER% > nul 2>&1
 del %ARIA2_INSTALLER% > nul 2>&1
 del %GIT_INSTALLER% > nul 2>&1
 del %VSCODE_INSTALLER% > nul 2>&1
@@ -311,6 +314,8 @@ del %MSYS2_INSTALLER% > nul 2>&1
 :: https://www.howtogeek.com/198815/use-this-secret-trick-to-close-and-restart-explorer.exe-in-windows/
 echo Restarting Windows Explorer to reload new configurations...
 taskkill /f /IM explorer.exe && start explorer
+
+popd
 
 echo Exiting Installation Script...
 exit /b %ERROR_RETURN%

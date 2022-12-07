@@ -27,6 +27,7 @@ set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
 set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
+set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 
 :: ===================================================================
 :: Start of 7-Zip Installation
@@ -34,7 +35,7 @@ set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 :check7z
 
 :: 7z fullpath exists, 7z has been installed, so skip
-if exist %SZ_EXE% goto checkAria2
+if exist "%SZ_EXE%" goto end7z
 
 :: Skip to install if installer already exist
 if exist %SZ_INSTALLER% goto install7z
@@ -55,13 +56,15 @@ setx /m PATH "%PATH%;%SZ_FULLPATH%"
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:end7z
+
 :: ===================================================================
 :: Start of aria2 Installation
 :: ===================================================================
 :checkAria2
 
 :: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%ARIA2_EXE%" goto checkChrome
+if exist "%ARIA2_EXE%" goto endAria2
 
 :: Skip to install if installer already exist
 if exist %ARIA2_INSTALLER% goto installAria2
@@ -83,6 +86,8 @@ setx /m PATH "%PATH%;%ARIA2_FULLPATH%"
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:endAria2
+
 :: ===================================================================
 :: Start of Chrome Installation
 :: ===================================================================
@@ -91,7 +96,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 set CHROME_EXE=%PROGRAMFILES%\Google\Chrome\Application\chrome.exe
 
 :: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%CHROME_EXE%" goto checkGit
+if exist "%CHROME_EXE%" goto endChrome
 
 :: Skip to install if installer already exist
 if exist %CHROME_INSTALLER% goto installChrome
@@ -107,22 +112,18 @@ call %CHROME_INSTALLER% /silent /install
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:endChrome
 :: Chrome will install in the background, do not babysit it, move on
 
 :: ===================================================================
 :: Start of Git Installation
 :: ===================================================================
 :checkGit
-:: Check for Git installation
-where git > nul 2>&1
 
-:: No error, Git has been installed, so skip
-if %ERRORLEVEL% equ 0 goto checkMsys2
-
-set GIT_FULLPATH="C:\Program Files\Git\cmd\git.exe"
+set GIT_EXE="C:\Program Files\Git\cmd\git.exe"
 
 :: git fullpath exists, git has been installed, so skip
-if exist %GIT_FULLPATH% goto checkMsys2
+if exist %GIT_EXE% goto endGit
 
 :: Skip to install if installer already exist
 if exist %GIT_INSTALLER% goto installGit
@@ -142,6 +143,8 @@ call %GIT_INSTALLER% /VERYSILENT /NORESTART
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:endGit
+
 :: ===================================================================
 :: Start of MSYS2 Installation
 :: ===================================================================
@@ -149,7 +152,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 set MSYS2_FULLPATH="C:\msys64"
 
 :: MSYS2 fullpath exists, MSYS2 has been installed, so skip
-if exist %MSYS2_FULLPATH% goto checkVscode
+if exist %MSYS2_FULLPATH% goto endMsys2
 
 :: Skip to install if installer already exist
 if exist %MSYS2_INSTALLER% goto installMsys2
@@ -202,20 +205,15 @@ set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "cat ~/.ssh/id_rsa.pub"
 if %ERRORLEVEL% neq 0 goto failInstall
 echo ================================================================================
 
+:endMsys2
+
 :: ===================================================================
 :: Start of VS Code Installation
 :: ===================================================================
 :checkVscode
-:: Check for VS Code installation
-where code > nul 2>&1
-
-:: No error, VS Code has been installed, so skip to install extention
-if %ERRORLEVEL% equ 0 goto installExtension
-
-set CODE_FULLPATH="C:\Program Files\Microsoft VS Code\bin\code"
 
 :: code fullpath exists, VS Code has been installed, so skip to install extention
-if exist %CODE_FULLPATH% goto installExtension
+if exist "%CODE_EXE%" goto installExtension
 
 :: Skip to install if installer already exist
 if exist %VSCODE_INSTALLER% goto installVscode
@@ -318,52 +316,52 @@ goto installExtension
 :: No error exit, nothing is fatal here
 
 :: GitLens for Git convenience
-call %CODE_FULLPATH% --force --install-extension eamodio.gitlens
+call "%CODE_EXE%" --force --install-extension eamodio.gitlens
 
 :: Git Graph for Git tree view
-call %CODE_FULLPATH%  --force --install-extension mhutchie.git-graph
+call "%CODE_EXE%"  --force --install-extension mhutchie.git-graph
 
 :: MS C/C++ Language support
-call %CODE_FULLPATH% --force --install-extension ms-vscode.cpptools-extension-pack
-call %CODE_FULLPATH% --force --install-extension VisualStudioExptTeam.vscodeintellicode
+call "%CODE_EXE%" --force --install-extension ms-vscode.cpptools-extension-pack
+call "%CODE_EXE%" --force --install-extension VisualStudioExptTeam.vscodeintellicode
 
 :: CMake Language support
-:: call %CODE_FULLPATH% --force --install-extension twxs.cmake
+:: call "%CODE_EXE%" --force --install-extension twxs.cmake
 
 :: CMake Tool for Build and Run
-:: call %CODE_FULLPATH% --force --install-extension ms-vscode.cmake-tools
+:: call "%CODE_EXE%" --force --install-extension ms-vscode.cmake-tools
 
 :: LLDB support
-call %CODE_FULLPATH% --force --install-extension vadimcn.vscode-lldb
+call "%CODE_EXE%" --force --install-extension vadimcn.vscode-lldb
 
 :: Google proto3 support
-call %CODE_FULLPATH% --force --install-extension zxh404.vscode-proto3
+call "%CODE_EXE%" --force --install-extension zxh404.vscode-proto3
 
 :: Python Language support
-call %CODE_FULLPATH% --force --install-extension ms-toolsai.jupyter
-call %CODE_FULLPATH% --force --install-extension ms-python.python
+call "%CODE_EXE%" --force --install-extension ms-toolsai.jupyter
+call "%CODE_EXE%" --force --install-extension ms-python.python
 
 :: Tasks to run user tasks conveniently in the blue Status bar at the bottom
-call %CODE_FULLPATH% --force --install-extension actboy168.tasks
+call "%CODE_EXE%" --force --install-extension actboy168.tasks
 
 :: Hex Editor support
-call %CODE_FULLPATH% --force --install-extension ms-vscode.hexeditor
+call "%CODE_EXE%" --force --install-extension ms-vscode.hexeditor
 
 :: Optional: TabNine AI auto completion similar to IntelliSense
-call %CODE_FULLPATH% --force --install-extension TabNine.tabnine-vscode
+call "%CODE_EXE%" --force --install-extension TabNine.tabnine-vscode
 
 :: node.js support
-call %CODE_FULLPATH% --force --install-extension waderyan.nodejs-extension-pack
+call "%CODE_EXE%" --force --install-extension waderyan.nodejs-extension-pack
 
 :: Verilog support
 :: Reference: https://github.com/mshr-h/vscode-verilog-hdl-support
-call %CODE_FULLPATH% --force --install-extension mshr-h.veriloghdl
+call "%CODE_EXE%" --force --install-extension mshr-h.veriloghdl
 
 :: HTML
-call %CODE_FULLPATH% --force --install-extension formulahendry.auto-complete-tag
+call "%CODE_EXE%" --force --install-extension formulahendry.auto-complete-tag
 
 :: ES6 - JavaScript/TypeScript
-call %CODE_FULLPATH% --force --install-extension Tobermory.es6-string-html
+call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
 
 :: ===================================================================
 :: End of Installation
@@ -391,5 +389,5 @@ goto endInstall
 
 :failAdmin
 echo Not running as administrator
-set ERROR_RETURN=21
+set ERROR_RETURN=2
 goto endInstall

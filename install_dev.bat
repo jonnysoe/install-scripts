@@ -283,10 +283,13 @@ echo Configuring Nodejs...
 PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force"
 
 :: Install Global Node Modules (ignore errors)
-:: NOTE: Do not add yo and generator-code as they will invoke another process which will call Node with outdated PATH
+:: NOTE:
+:: - Need to add "call" as npm/npx will invoke another process, executing them without "call" will not return control
+::   https://stackoverflow.com/a/42306073/19336104
+:: - Do not add yo and generator-code as they will invoke another process which will call Node with outdated PATH
 set PATH=%PATH%;%NODEJS_FULLPATH%
-npm install -g yarn npm@latest > nul
-npx yarn global add @vscode/vsce > nul
+call npm install -g yarn npm@latest
+call npx yarn global add @vscode/vsce
 
 :endNodejs
 

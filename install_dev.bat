@@ -280,7 +280,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 echo Configuring Nodejs...
 
 :: Allow script execution
-PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force"
+PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force"
 
 :: Install Global Node Modules (ignore errors)
 :: NOTE:

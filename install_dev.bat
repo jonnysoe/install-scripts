@@ -17,6 +17,7 @@ set SZ_INSTALLER=7z.msi
 set ARIA2_INSTALLER=aria2.zip
 set CHROME_INSTALLER=ChromeSetup.exe
 set GIT_INSTALLER=GitSetup.exe
+set PYTHON_INSTALLER=python-amd64.exe
 set VSCODE_INSTALLER=VSCodeSetup.exe
 set MSYS2_INSTALLER=msys2.exe
 
@@ -176,6 +177,37 @@ call %GIT_INSTALLER% /VERYSILENT /NORESTART
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endGit
+
+:: ===================================================================
+:: Start of Python Installation
+:: ===================================================================
+:checkPython
+
+set PYTHON_EXE="C:\Program Files\Git\cmd\python.exe"
+
+:: Python fullpath exists, git has been installed, so skip
+if exist %PYTHON_EXE% goto endPython
+
+:: Skip to install if installer already exist
+if exist %PYTHON_INSTALLER% goto installPython
+
+:downloadPython
+echo Downloading Python...
+:: Do not use 3.11, there is a module bug requiring msvc, which should never be the case with Python modules
+call "%ARIA2_EXE%" -o %PYTHON_INSTALLER% "https://www.python.org/ftp/python/3.10.9/python-3.10.9-amd64.exe"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+if not exist %PYTHON_INSTALLER% goto failInstall
+
+:installPython
+echo Installing Python...
+call %PYTHON_INSTALLER% /quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endPython
 
 :: ===================================================================
 :: Start of MSYS2 Installation

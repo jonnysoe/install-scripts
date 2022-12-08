@@ -25,8 +25,10 @@ set MSYS2_INSTALLER=msys2.exe
 :: Rerunning this script will not have new PATH included
 set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
 set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
+set PTTB_FULLPATH=%PROGRAMFILES%\pttb
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
+set PTTB_EXE=%PTTB_FULLPATH%\pttb.exe
 set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 
 :: ===================================================================
@@ -87,6 +89,36 @@ setx /m PATH "%PATH%;%ARIA2_FULLPATH%"
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endAria2
+
+:: ===================================================================
+:: Start of Pin to TaskBar Installation
+:: ===================================================================
+:checkPttb
+
+:: aria2 fullpath exists, aria2 has been installed, so skip
+if exist "%PTTB_EXE%" goto endPttb
+
+:: Skip to install if installer already exist
+if exist %PTTB_INSTALLER% goto installPttb
+
+:: Make directory if it doesn't exist
+if exist "%PTTB_FULLPATH%" goto downloadPttb
+mkdir "%PTTB_FULLPATH%"
+
+:downloadPttb
+echo Downloading Pin To Taskbar...
+call "%ARIA2_EXE%" -d "%PTTB_FULLPATH%" "https://github.com/0x546F6D/pttb_-_Pin_To_TaskBar/raw/main/pttb.exe"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Add to PATH environment variable
+setx /m PATH "%PATH%;%PTTB_FULLPATH%"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endPttb
 
 :: ===================================================================
 :: Start of Chrome Installation
@@ -248,7 +280,8 @@ call %VSCODE_INSTALLER% /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextme
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-:: Copy vscode to Quick Launch
+:: Pin vscode to Taskbar and Quick Launch
+"%PTTB_EXE%" "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk"
 copy "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk" "%AppData%\Microsoft\Internet Explorer\Quick Launch\"
 
 :editSettings

@@ -50,6 +50,9 @@ if exist %SZ_INSTALLER% goto install7z
 echo Downloading 7-Zip...
 curl -L -o %SZ_INSTALLER% "https://www.7-zip.org/a/7z2201-x64.msi"
 
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
 :install7z
 start /wait MsiExec.exe /i %SZ_INSTALLER% /qn
 
@@ -78,6 +81,9 @@ if exist %ARIA2_INSTALLER% goto installAria2
 :downloadAria2
 echo Downloading aria2...
 curl -L -o %ARIA2_INSTALLER% "https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
 
 :installAria2
 start /wait MsiExec.exe /i %ARIA2_INSTALLER% /qn
@@ -113,7 +119,7 @@ mkdir "%PTTB_FULLPATH%"
 echo Downloading Pin To Taskbar...
 call "%ARIA2_EXE%" -d "%PTTB_FULLPATH%" "https://github.com/0x546F6D/pttb_-_Pin_To_TaskBar/raw/main/pttb.exe"
 
-:: Fail if installation fails
+:: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add to PATH environment variable
@@ -140,6 +146,9 @@ if exist %CHROME_INSTALLER% goto installChrome
 :downloadChrome
 echo Downloading Google Chrome...
 call "%ARIA2_EXE%" -o %CHROME_INSTALLER% "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B52B94939-B32C-7286-0CE9-69EEDAE2F130%7D%26lang%3Den%26browser%3D3%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-stable-statsdef_1%26installdataindex%3Dempty/chrome/install/ChromeStandaloneSetup64.exe"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
 
 :installChrome
 :: https://silentinstallhq.com/google-chrome-exe-silent-install-how-to-guide/
@@ -170,7 +179,6 @@ call "%ARIA2_EXE%" -o %GIT_INSTALLER% "https://github.com/git-for-windows/git/re
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
-if not exist %GIT_INSTALLER% goto failInstall
 
 :installGit
 echo Installing Git...
@@ -233,7 +241,6 @@ call "%ARIA2_EXE%" -o %PYTHON_INSTALLER% "https://www.python.org/ftp/python/3.10
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
-if not exist %PYTHON_INSTALLER% goto failInstall
 
 :installPython
 echo Installing Python...
@@ -297,7 +304,10 @@ if exist %MSYS2_INSTALLER% goto installMsys2
 
 :downloadMsys2
 echo Downloading MSYS2...
-call "%ARIA2_EXE%" -o %MSYS2_INSTALLER% https://github.com/msys2/msys2-installer/releases/download/2022-10-28/msys2-x86_64-20221028.exe
+call "%ARIA2_EXE%" -o %MSYS2_INSTALLER% "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/msys2-x86_64-20221028.exe"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
 
 :installMsys2
 :: https://silentinstallhq.com/msys2-silent-install-how-to-guide/
@@ -352,14 +362,6 @@ mklink /D "%USERPROFILE%\.ssh" "%MSYS2_FULLPATH%\home\%USERNAME%\.ssh" > nul 2>&
 mkdir "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
 mklink /D "%USERPROFILE%\_dev" "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
 
-:: Display SSH key
-echo Add SSH key, eg:
-echo https://github.com/settings/ssh/new
-echo https://gitlab.com/-/profile/keys
-echo ================================================================================
-type %MSYS2_FULLPATH%\home\%USERNAME%\.ssh\id_rsa.pub
-echo ================================================================================
-
 :endMsys2
 
 :: ===================================================================
@@ -391,7 +393,6 @@ if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
-if not exist %VSCODE_INSTALLER% goto failInstall
 
 :installVscode
 echo Installing VS Code...
@@ -518,6 +519,17 @@ call "%CODE_EXE%" --force --install-extension formulahendry.auto-complete-tag
 
 :: ES6 - JavaScript/TypeScript
 call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
+
+:: ===================================================================
+:: Display SSH key
+:: ===================================================================
+:displaySshKey
+echo Add SSH key, eg:
+echo https://github.com/settings/ssh/new
+echo https://gitlab.com/-/profile/keys
+echo ================================================================================
+type %MSYS2_FULLPATH%\home\%USERNAME%\.ssh\id_rsa.pub
+echo ================================================================================
 
 :: ===================================================================
 :: End of Installation

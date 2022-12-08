@@ -18,6 +18,7 @@ set ARIA2_INSTALLER=aria2.zip
 set CHROME_INSTALLER=ChromeSetup.exe
 set GIT_INSTALLER=GitSetup.exe
 set PYTHON_INSTALLER=python-amd64.exe
+set NODEJS_INSTALLER=node-x64.msi
 set VSCODE_INSTALLER=VSCodeSetup.exe
 set MSYS2_INSTALLER=msys2.exe
 
@@ -27,10 +28,10 @@ set MSYS2_INSTALLER=msys2.exe
 set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
 set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
 set PTTB_FULLPATH=%PROGRAMFILES%\pttb
+set NODEJS_FULLPATH=%PROGRAMFILES%\nodejs
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 set PTTB_EXE=%PTTB_FULLPATH%\pttb.exe
-set GIT_BASH_EXE=%PROGRAMFILES%\Git\git-bash.exe
 set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 
 :: ===================================================================
@@ -49,7 +50,7 @@ echo Downloading 7-Zip...
 curl -L -o %SZ_INSTALLER% "https://www.7-zip.org/a/7z2201-x64.msi"
 
 :install7z
-MsiExec.exe /i %SZ_INSTALLER% /qn
+start /wait MsiExec.exe /i %SZ_INSTALLER% /qn
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -78,7 +79,7 @@ echo Downloading aria2...
 curl -L -o %ARIA2_INSTALLER% "https://github.com/aria2/aria2/releases/download/release-1.36.0/aria2-1.36.0-win-64bit-build1.zip"
 
 :installAria2
-MsiExec.exe /i %ARIA2_INSTALLER% /qn
+start /wait MsiExec.exe /i %ARIA2_INSTALLER% /qn
 call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%PROGRAMFILES%\aria2"
 
 :: Fail if installation fails
@@ -141,7 +142,7 @@ call "%ARIA2_EXE%" -o %CHROME_INSTALLER% "https://dl.google.com/tag/s/appguid%3D
 
 :installChrome
 :: https://silentinstallhq.com/google-chrome-exe-silent-install-how-to-guide/
-call %CHROME_INSTALLER% /silent /install
+start /wait %CHROME_INSTALLER% /silent /install
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -211,6 +212,39 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :endPython
 
 :: ===================================================================
+:: Start of Nodejs Installation
+:: ===================================================================
+:checkNodejs
+
+:: Nodejs fullpath exists, Nodejs has been installed, so skip
+if exist "%NODEJS_FULLPATH%" goto configNodejs
+
+:: Skip to install if installer already exist
+if exist %NODEJS_INSTALLER% goto installNodejs
+
+:downloadNodejs
+echo Downloading Nodejs...
+call "%ARIA2_EXE%" -o %NODEJS_INSTALLER% "https://nodejs.org/download/release/v16.18.1/node-v16.18.1-x64.msi"
+
+:installNodejs
+:: https://silentinstallhq.com/node-js-silent-install-how-to-guide/
+start /wait MsiExec.exe /i %NODEJS_INSTALLER% /qn
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configNodejs
+echo Configuring Nodejs...
+
+:: Allow script execution
+PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force"
+
+:: Install Global Node Modules (ignore errors)
+call "%NODEJS_FULLPATH%\npm" install -g yarn npm@latest > nul
+
+:endNodejs
+
+:: ===================================================================
 :: Start of MSYS2 Installation
 :: ===================================================================
 :checkMsys2
@@ -243,40 +277,41 @@ if %ERRORLEVEL% neq 0 goto failInstall
 echo Configuring MSYS2...
 
 :: Install MinGW and dependencies for MSYS2
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
+set MSYSTEM=MSYS
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "pacman -S --noconfirm --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add /mingw64/bin to PATH variable
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -n \"`grep mingw64 ~/.bashrc`\" ]] || echo \"export PATH=\$PATH:/mingw64/bin\" >> ~/.bashrc"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n \"`grep mingw64 ~/.bashrc`\" ]] || echo \"export PATH=\$PATH:/mingw64/bin\" >> ~/.bashrc"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Symlink librt.a
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f /mingw64/lib/librt.a ]] || ln -s /usr/lib/librt.a /mingw64/lib"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f /mingw64/lib/librt.a ]] || ln -s /usr/lib/librt.a /mingw64/lib"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Symlink Py.exe
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f /usr/bin/python3 ]] || ln -s /c/Windows/py.exe /usr/bin/python3"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f /usr/bin/python3 ]] || ln -s /c/Windows/py.exe /usr/bin/python3"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Generate SSH Key
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-:: Symlink SSH directory to Git Bash's (Windows) user directory to share SSH key
-"%GIT_BASH_EXE%" --login -c "[[ -d ~/.ssh ]] || ln -s /c/msys64/home/%USERNAME%/.ssh ~/.ssh"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 goto failInstall
+:: Symlink directories in MSYS2 to Windows' (Git Bash) user directory to share directories
+:: NOTE: This needs to be Windows' symlink to be visible in Windows
+mklink /D "%USERPROFILE%\.ssh" "%MSYS2_FULLPATH%\home\%USERNAME%\.ssh" > nul 2>&1
+mkdir "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
+mklink /D "%USERPROFILE%\_dev" "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
 
 :: Display SSH key
 echo Add SSH key, eg:
@@ -305,14 +340,14 @@ echo Downloading VS Code...
 :: Detect OS architecture and download accordingly
 :: https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details
 if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
-	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64"
+    call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64"
 ) else if /i %PROCESSOR_ARCHITECTURE%==x86 (
-	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32"
+    call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32"
 ) else if /i %PROCESSOR_ARCHITECTURE%==ARM64 (
-	call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-arm64"
+    call "%ARIA2_EXE%" -o %VSCODE_INSTALLER% "https://code.visualstudio.com/sha/download?build=stable&os=win32-arm64"
 ) else (
-	rem unsupported architecture, eg. Intel Itanium
-	goto failInstall
+    echo unsupported architecture for VS Code, eg. Intel Itanium
+    goto failInstall
 )
 
 :: Fail if download fails

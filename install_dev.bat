@@ -30,6 +30,7 @@ set PTTB_FULLPATH=%PROGRAMFILES%\pttb
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 set PTTB_EXE=%PTTB_FULLPATH%\pttb.exe
+set GIT_BASH_EXE=%PROGRAMFILES%\Git\git-bash.exe
 set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 
 :: ===================================================================
@@ -183,7 +184,8 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkPython
 
-set PYTHON_EXE="C:\Program Files\Git\cmd\python.exe"
+:: Do not use 3.11, there is a module bug requiring msvc, which should never be the case with Python modules
+set PYTHON_EXE="%PROGRAMFILES%\Python310\python.exe"
 
 :: Python fullpath exists, git has been installed, so skip
 if exist %PYTHON_EXE% goto endPython
@@ -193,7 +195,6 @@ if exist %PYTHON_INSTALLER% goto installPython
 
 :downloadPython
 echo Downloading Python...
-:: Do not use 3.11, there is a module bug requiring msvc, which should never be the case with Python modules
 call "%ARIA2_EXE%" -o %PYTHON_INSTALLER% "https://www.python.org/ftp/python/3.10.9/python-3.10.9-amd64.exe"
 
 :: Fail if download fails
@@ -216,7 +217,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 set MSYS2_FULLPATH="C:\msys64"
 
 :: MSYS2 fullpath exists, MSYS2 has been installed, so skip
-if exist %MSYS2_FULLPATH% goto endMsys2
+if exist %MSYS2_FULLPATH% goto configMsys2
 
 :: Skip to install if installer already exist
 if exist %MSYS2_INSTALLER% goto installMsys2
@@ -238,35 +239,51 @@ setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin"
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:configMsys2
+echo Configuring MSYS2...
+
 :: Install MinGW and dependencies for MSYS2
-set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "pacman -S --noconfirm --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "ln -s /usr/lib/librt.a /mingw64/lib"
+:: Add /mingw64/bin to PATH variable
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -n \"`grep mingw64 ~/.bashrc`\" ]] || echo \"export PATH=\$PATH:/mingw64/bin\" >> ~/.bashrc"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "echo \"export PATH=\$PATH:/mingw64/bin\" >> ~/.bashrc"
+:: Symlink librt.a
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f /mingw64/lib/librt.a ]] || ln -s /usr/lib/librt.a /mingw64/lib"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
+:: Symlink Py.exe
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f /usr/bin/python3 ]] || ln -s /c/Windows/py.exe /usr/bin/python3"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:: Generate SSH Key
+set MSYSTEM=MSYS && C:\msys64\usr\bin\bash --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Symlink SSH directory to Git Bash's (Windows) user directory to share SSH key
+"%GIT_BASH_EXE%" --login -c "[[ -d ~/.ssh ]] || ln -s /c/msys64/home/%USERNAME%/.ssh ~/.ssh"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Display SSH key
 echo Add SSH key, eg:
 echo https://github.com/settings/ssh/new
 echo https://gitlab.com/-/profile/keys
 echo ================================================================================
-set MSYSTEM=MSYS && c:\msys64\usr\bin\bash --login -c "cat ~/.ssh/id_rsa.pub"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 goto failInstall
+type %MSYS2_FULLPATH%\home\%USERNAME%\.ssh\id_rsa.pub
 echo ================================================================================
 
 :endMsys2
@@ -438,10 +455,6 @@ del %ARIA2_INSTALLER% > nul 2>&1
 del %GIT_INSTALLER% > nul 2>&1
 del %VSCODE_INSTALLER% > nul 2>&1
 del %MSYS2_INSTALLER% > nul 2>&1
-
-:: https://www.howtogeek.com/198815/use-this-secret-trick-to-close-and-restart-explorer.exe-in-windows/
-echo Restarting Windows Explorer to reload new configurations...
-taskkill /f /IM explorer.exe && start explorer
 
 popd
 

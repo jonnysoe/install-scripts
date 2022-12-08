@@ -17,6 +17,7 @@ set SZ_INSTALLER=7z.msi
 set ARIA2_INSTALLER=aria2.zip
 set CHROME_INSTALLER=ChromeSetup.exe
 set GIT_INSTALLER=GitSetup.exe
+set MSVC_INSTALLER=vs_BuildTools.exe
 set PYTHON_INSTALLER=python-amd64.exe
 set NODEJS_INSTALLER=node-x64.msi
 set VSCODE_INSTALLER=VSCodeSetup.exe
@@ -181,11 +182,43 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :endGit
 
 :: ===================================================================
+:: Start of Microsoft C++ Build Tools Installation
+:: ===================================================================
+:checkMsvc
+goto endMsvc
+
+set MSVC_FULLPATH=%PROGRAMFILES%\Microsoft Visual Studio
+
+:: MSVC fullpath exists, git has been installed, so skip
+if exist %MSVC_FULLPATH% goto endMsvc
+
+:: Skip to install if installer already exist
+if exist %MSVC_INSTALLER% goto installMsvc
+
+:downloadMsvc
+echo Downloading Microsoft C++ Build Tools...
+call "%ARIA2_EXE%" -o %MSVC_INSTALLER% "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installMsvc
+:: https://dimitri.janczak.net/2018/10/22/visual-c-build-tools-silent-installation/
+:: https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
+:: Let this run in the background, add "--wait" if there are MSVC dependencies in the future
+%MSVC_INSTALLER% --layout .\vs_buildtools --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --quiet --norestart
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endMsvc
+
+:: ===================================================================
 :: Start of Python Installation
 :: ===================================================================
 :checkPython
 
-:: Do not use 3.11, there is a module bug requiring msvc, which should never be the case with Python modules
+:: Do not use 3.11, there is a module bug requiring MSVC, which should never be the case with Python modules
 set PYTHON_EXE="%PROGRAMFILES%\Python310\python.exe"
 
 :: Python fullpath exists, git has been installed, so skip

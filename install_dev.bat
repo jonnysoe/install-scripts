@@ -259,6 +259,9 @@ if exist %NODEJS_INSTALLER% goto installNodejs
 echo Downloading Nodejs...
 call "%ARIA2_EXE%" -o %NODEJS_INSTALLER% "https://nodejs.org/download/release/v16.18.1/node-v16.18.1-x64.msi"
 
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
 :installNodejs
 :: https://silentinstallhq.com/node-js-silent-install-how-to-guide/
 start /wait MsiExec.exe /i %NODEJS_INSTALLER% /qn
@@ -273,7 +276,10 @@ echo Configuring Nodejs...
 PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force"
 
 :: Install Global Node Modules (ignore errors)
-call "%NODEJS_FULLPATH%\npm" install -g yarn npm@latest > nul
+:: NOTE: Do not add yo and generator-code as they will invoke another process which will call Node with outdated PATH
+set PATH=%PATH%;%NODEJS_FULLPATH%
+npm install -g yarn npm@latest > nul
+npx yarn global add @vscode/vsce > nul
 
 :endNodejs
 

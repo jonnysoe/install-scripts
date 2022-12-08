@@ -320,7 +320,8 @@ call %MSYS2_INSTALLER% install --root %MSYS2_FULLPATH% --confirm-command
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add to PATH environment variable
-setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin"
+:: NOTE: the bin paths contain the necessary DLLs to be loaded at runtime
+setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin;%MSYS2_FULLPATH%\mingw64\bin"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall

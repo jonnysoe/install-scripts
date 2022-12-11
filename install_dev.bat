@@ -131,36 +131,6 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :endPttb
 
 :: ===================================================================
-:: Start of Chrome Installation
-:: ===================================================================
-:checkChrome
-
-set CHROME_EXE=%PROGRAMFILES%\Google\Chrome\Application\chrome.exe
-
-:: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%CHROME_EXE%" goto endChrome
-
-:: Skip to install if installer already exist
-if exist %CHROME_INSTALLER% goto installChrome
-
-:downloadChrome
-echo Downloading Google Chrome...
-call "%ARIA2_EXE%" -o %CHROME_INSTALLER% "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B52B94939-B32C-7286-0CE9-69EEDAE2F130%7D%26lang%3Den%26browser%3D3%26usagestats%3D0%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-stable-statsdef_1%26installdataindex%3Dempty/chrome/install/ChromeStandaloneSetup64.exe"
-
-:: Fail if download fails
-if %ERRORLEVEL% neq 0 goto failInstall
-
-:installChrome
-:: https://silentinstallhq.com/google-chrome-exe-silent-install-how-to-guide/
-start /wait %CHROME_INSTALLER% /silent /install
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 goto failInstall
-
-:endChrome
-:: Chrome will install in the background, do not babysit it, move on
-
-:: ===================================================================
 :: Start of Git Installation
 :: ===================================================================
 :checkGit

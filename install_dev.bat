@@ -15,7 +15,6 @@ if %ERRORLEVEL% neq 0 goto failAdmin
 :: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
 set SZ_INSTALLER=7z.msi
 set ARIA2_INSTALLER=aria2.zip
-set CHROME_INSTALLER=ChromeSetup.exe
 set GIT_INSTALLER=GitSetup.exe
 set MSVC_INSTALLER=vs_BuildTools.exe
 set PYTHON_INSTALLER=python-amd64.exe
@@ -301,7 +300,7 @@ echo Configuring MSYS2...
 
 :: Install MinGW and dependencies for MSYS2
 set MSYSTEM=MSYS
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "pacman -S --noconfirm --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git pkgconf unzip"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "pacman -S --noconfirm --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-cmake mingw-w64-x86_64-dlfcn mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-ninja mingw-w64-x86_64-zlib msys2-runtime-devel bison flex git make pkgconf unzip"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall

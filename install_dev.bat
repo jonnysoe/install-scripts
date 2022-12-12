@@ -28,10 +28,16 @@ set MSYS2_INSTALLER=msys2.exe
 set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
 set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
 set PTTB_FULLPATH=%PROGRAMFILES%\pttb
+:: Do not use 3.11, there is a module bug requiring MSVC, which should never be the case with Python modules
+set PYTHON_PATH=Python310
+set PYTHON_FULLPATH=%PROGRAMFILES%\%PYTHON_PATH%
+set PIP_FULLPATH=%PYTHON_FULLPATH%\Scripts
 set NODEJS_FULLPATH=%PROGRAMFILES%\nodejs
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 set PTTB_EXE=%PTTB_FULLPATH%\pttb.exe
+set PYTHON_EXE=%PYTHON_FULLPATH%\python.exe
+set PIP_EXE=%PIP_FULLPATH%\pip.exe
 set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 
 :: ===================================================================
@@ -199,17 +205,15 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkPython
 
-:: Do not use 3.11, there is a module bug requiring MSVC, which should never be the case with Python modules
-set PYTHON_EXE="%PROGRAMFILES%\Python310\python.exe"
-
 :: Python fullpath exists, git has been installed, so skip
-if exist %PYTHON_EXE% goto endPython
+if exist "%PYTHON_EXE%" goto configPython
 
 :: Skip to install if installer already exist
 if exist %PYTHON_INSTALLER% goto installPython
 
 :downloadPython
 echo Downloading Python...
+:: https://www.python.org/downloads/windows/
 call "%ARIA2_EXE%" -o %PYTHON_INSTALLER% "https://www.python.org/ftp/python/3.10.9/python-3.10.9-amd64.exe"
 
 :: Fail if download fails
@@ -220,6 +224,18 @@ echo Installing Python...
 call %PYTHON_INSTALLER% /quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1
 
 :: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configPython
+:: There is a bug in Python310 where PrependPath doesn't work
+:: Always check for the PATH environment variable from registry for the latest values
+:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
+reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" | findstr /i "Python" > nul
+
+:: Append to PATH variable if missing
+if %ERRORLEVEL% neq 0 setx /m PATH "%PATH%;%PYTHON_FULLPATH%;%PIP_FULLPATH%"
+
+:: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endPython
@@ -322,7 +338,19 @@ if %ERRORLEVEL% neq 0 goto failInstall
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Symlink Py.exe
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f /usr/bin/python ]] || ln -s /c/Windows/py.exe /usr/bin/python"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Symlink Py.exe
 %MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f /usr/bin/python3 ]] || ln -s /c/Windows/py.exe /usr/bin/python3"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Symlink pip.exe
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f /usr/bin/pip ]] || ln -s /c/Program\ Files/Python310/Scripts/pip.exe /usr/bin/pip"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -405,7 +433,6 @@ if not exist %VSCODE_SETTINGS% (
     echo     "window.restoreWindows": "none",
     echo     "editor.rulers": [72,120],
     echo     "files.trimTrailingWhitespace": true,
-    echo     "window.restoreWindows": "none",
     echo     "editor.renderWhitespace": "all",
     echo     "terminal.integrated.defaultProfile.windows": "MSYS - MSYS2",
     echo     "terminal.integrated.profiles.windows": {
@@ -514,6 +541,7 @@ call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
 :: Display SSH key
 :: ===================================================================
 :displaySshKey
+echo.
 echo Add SSH key, eg:
 echo https://github.com/settings/ssh/new
 echo https://gitlab.com/-/profile/keys

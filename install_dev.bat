@@ -134,6 +134,9 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkGit
 
+:: Latest MSYS2 is having compatibility issue with Git for Windows
+goto endGit
+
 set GIT_EXE="C:\Program Files\Git\cmd\git.exe"
 
 :: git fullpath exists, git has been installed, so skip
@@ -144,7 +147,8 @@ if exist %GIT_INSTALLER% goto installGit
 
 :downloadGit
 echo Downloading Git...
-call "%ARIA2_EXE%" -o %GIT_INSTALLER% "https://github.com/git-for-windows/git/releases/download/v2.36.1.windows.1/Git-2.36.1-64-bit.exe"
+:: https://github.com/git-for-windows/git/releases/latest
+call "%ARIA2_EXE%" -o %GIT_INSTALLER% "https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe"
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -403,7 +407,20 @@ if not exist %VSCODE_SETTINGS% (
     echo     "files.trimTrailingWhitespace": true,
     echo     "window.restoreWindows": "none",
     echo     "editor.renderWhitespace": "all",
-    echo     "terminal.integrated.defaultProfile.windows": "Git Bash",
+    echo     "terminal.integrated.defaultProfile.windows": "MSYS - MSYS2",
+    echo     "terminal.integrated.profiles.windows": {
+    echo         "MSYS - MSYS2": {
+    echo             "path": "C:/msys64/usr/bin/bash.exe",
+    echo             "args": [
+    echo                 "--login",
+    echo                 "-i"
+    echo             ],
+    echo             "env": {
+    echo                 "MSYSTEM": "MSYS",
+    echo                 "CHERE_INVOKING": "1"
+    echo             }
+    echo         }
+    echo     },
     echo     "files.associations": {
     echo         "CmakeLists.txt": "cmake",
     echo         "*.inc": "cpp"

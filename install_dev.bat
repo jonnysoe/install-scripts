@@ -21,6 +21,7 @@ set PYTHON_INSTALLER=python-amd64.exe
 set NODEJS_INSTALLER=node-x64.msi
 set VSCODE_INSTALLER=VSCodeSetup.exe
 set MSYS2_INSTALLER=msys2.exe
+set OVPN_INSTALLER=openvpn.msi
 
 :: Common fullpaths
 :: fresh installation with registry update will no be reflected in current cmd session
@@ -538,6 +539,36 @@ call "%CODE_EXE%" --force --install-extension formulahendry.auto-complete-tag
 call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
 
 :: ===================================================================
+:: Start of OpenVPN Installation
+:: ===================================================================
+:checkOvpn
+
+set OVPN_EXE="%PROGRAMFILES%\OpenVPN\bin\openvpn-gui.exe"
+
+:: git fullpath exists, git has been installed, so skip
+if exist %OVPN_EXE% goto endOvpn
+
+:: Skip to install if installer already exist
+if exist %OVPN_INSTALLER% goto installOvpn
+
+:downloadOvpn
+echo Downloading OpenVPN...
+:: https://openvpn.net/community-downloads/
+call "%ARIA2_EXE%" -o %OVPN_INSTALLER% "https://swupdate.openvpn.org/community/releases/OpenVPN-2.5.8-I604-amd64.msi"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installOvpn
+echo Installing OpenVPN...
+start /wait MsiExec.exe /i %OVPN_INSTALLER% /qn
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endOvpn
+
+:: ===================================================================
 :: Display SSH key
 :: ===================================================================
 :displaySshKey
@@ -559,6 +590,7 @@ del %ARIA2_INSTALLER% > nul 2>&1
 del %GIT_INSTALLER% > nul 2>&1
 del %VSCODE_INSTALLER% > nul 2>&1
 del %MSYS2_INSTALLER% > nul 2>&1
+del %OVPN_INSTALLER% > nul 2>&1
 
 popd
 

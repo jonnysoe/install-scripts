@@ -434,7 +434,7 @@ if not exist %VSCODE_SETTINGS% (
     echo     "editor.rulers": [72,120],
     echo     "files.trimTrailingWhitespace": true,
     echo     "editor.renderWhitespace": "all",
-    echo     "terminal.integrated.defaultProfile.windows": "MSYS - MSYS2",
+    echo     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     echo     "terminal.integrated.profiles.windows": {
     echo         "MSYS - MSYS2": {
     echo             "path": "C:/msys64/usr/bin/bash.exe",

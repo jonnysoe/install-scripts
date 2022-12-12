@@ -47,7 +47,7 @@ set CODE_EXE=C:\Program Files\Microsoft VS Code\bin\code
 :check7z
 
 :: 7z fullpath exists, 7z has been installed, so skip
-if exist "%SZ_EXE%" goto end7z
+if exist "%SZ_EXE%" goto config7z
 
 :: Skip to install if installer already exist
 if exist %SZ_INSTALLER% goto install7z
@@ -65,10 +65,11 @@ start /wait MsiExec.exe /i %SZ_INSTALLER% /qn
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:config7z
 :: Add to PATH environment variable
-setx /m PATH "%PATH%;%SZ_FULLPATH%"
+call:appendPath %SZ_FULLPATH%
 
-:: Fail if installation fails
+:: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :end7z
@@ -79,7 +80,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :checkAria2
 
 :: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%ARIA2_EXE%" goto endAria2
+if exist "%ARIA2_EXE%" goto configAria2
 
 :: Skip to install if installer already exist
 if exist %ARIA2_INSTALLER% goto installAria2
@@ -98,10 +99,11 @@ call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%PROGRAMFILES%\aria2"
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:configAria2
 :: Add to PATH environment variable
-setx /m PATH "%PATH%;%ARIA2_FULLPATH%"
+call:appendPath %ARIA2_FULLPATH%
 
-:: Fail if installation fails
+:: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endAria2
@@ -112,7 +114,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :checkPttb
 
 :: aria2 fullpath exists, aria2 has been installed, so skip
-if exist "%PTTB_EXE%" goto endPttb
+if exist "%PTTB_EXE%" goto configPttb
 
 :: Skip to install if installer already exist
 if exist %PTTB_INSTALLER% goto installPttb
@@ -128,10 +130,11 @@ call "%ARIA2_EXE%" -d "%PTTB_FULLPATH%" "https://github.com/0x546F6D/pttb_-_Pin_
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:configPttb
 :: Add to PATH environment variable
-setx /m PATH "%PATH%;%PTTB_FULLPATH%"
+call:appendPath %PTTB_FULLPATH%
 
-:: Fail if installation fails
+:: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endPttb
@@ -228,13 +231,14 @@ call %PYTHON_INSTALLER% /quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :configPython
-:: There is a bug in Python310 where PrependPath doesn't work
-:: Always check for the PATH environment variable from registry for the latest values
-:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
-reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" | findstr /i "Python" > nul
+:: Add to PATH environment variable
+call:appendPath %PYTHON_FULLPATH%
 
-:: Append to PATH variable if missing
-if %ERRORLEVEL% neq 0 setx /m PATH "%PATH%;%PYTHON_FULLPATH%;%PIP_FULLPATH%"
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Add to PATH environment variable
+call:appendPath %PIP_FULLPATH%
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -272,12 +276,17 @@ echo Configuring Nodejs...
 :: Allow script execution
 PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force"
 
+:: Add to PATH environment variable
+call:appendPath %NODEJS_FULLPATH%
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
 :: Install Global Node Modules (ignore errors)
 :: NOTE:
 :: - Need to add "call" as npm/npx will invoke another process, executing them without "call" will not return control
 ::   https://stackoverflow.com/a/42306073/19336104
 :: - Do not add yo and generator-code as they will invoke another process which will call Node with outdated PATH
-set PATH=%PATH%;%NODEJS_FULLPATH%
 call npm install -g yarn npm@latest
 call npx yarn global add @vscode/vsce
 
@@ -287,7 +296,7 @@ call npx yarn global add @vscode/vsce
 :: Start of MSYS2 Installation
 :: ===================================================================
 :checkMsys2
-set MSYS2_FULLPATH="C:\msys64"
+set MSYS2_FULLPATH=C:\msys64
 
 :: MSYS2 fullpath exists, MSYS2 has been installed, so skip
 if exist %MSYS2_FULLPATH% goto configMsys2
@@ -309,15 +318,21 @@ call %MSYS2_INSTALLER% install --root %MSYS2_FULLPATH% --confirm-command
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
-:: Add to PATH environment variable
-:: NOTE: the bin paths contain the necessary DLLs to be loaded at runtime
-setx /m PATH "%PATH%;%MSYS2_FULLPATH%\usr\bin;%MSYS2_FULLPATH%\mingw64\bin"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 goto failInstall
 
 :configMsys2
 echo Configuring MSYS2...
+
+:: Add to PATH environment variable
+call:appendPath %MSYS2_FULLPATH%\usr\bin
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Add to PATH environment variable
+call:appendPath %MSYS2_FULLPATH%\mingw64\bin
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Install MinGW and dependencies for MSYS2
 set MSYSTEM=MSYS
@@ -605,3 +620,62 @@ goto endInstall
 echo Not running as administrator
 set ERROR_RETURN=2
 goto endInstall
+
+:: ===================================================================
+:: Start of helper subroutines
+:: ===================================================================
+:appendPath
+:: Do not add invalid Path
+if not exist "%*" exit /b %ERRORLEVEL%
+
+:: Always check for the PATH environment variable from registry for the latest values
+:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
+:: https://stackoverflow.com/a/6362922/19336104
+for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%F
+
+:: Remove "Key" and "Type" from Registry Query
+:: https://stackoverflow.com/a/23600965/19336104
+set PATH=%PATH_REG:*REG_SZ    =%
+
+:: Skip adding to PATH variable if its already added
+echo %PATH% | findstr /c:"%*" > nul
+if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
+
+:: Attempt with a backup variable, to ensure PATH is synchronized
+set PATH_BAK=%PATH%;%*
+setx /m PATH "%PATH_BAK%" > nul
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+echo Appended PATH with "%*"
+
+:: Update PATH environment variable in current session after successfully added
+set PATH=%PATH_BAK%
+
+exit /b %ERRORLEVEL%
+
+:prependPath
+:: Do not add invalid Path
+if not exist "%*" exit /b %ERRORLEVEL%
+
+:: Always check for the PATH environment variable from registry for the latest values
+:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
+:: https://stackoverflow.com/a/6362922/19336104
+for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%F
+
+:: Remove "Key" and "Type" from Registry Query
+:: https://stackoverflow.com/a/23600965/19336104
+set PATH=%PATH_REG:*REG_SZ    =%
+
+:: Skip adding to PATH variable if its already added
+echo %PATH% | findstr /c:"%*" > nul
+if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
+
+:: Attempt with a backup variable, to ensure PATH is synchronized
+set PATH_BAK=%*;%PATH%
+setx /m PATH "%PATH_BAK%" > nul
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+echo Prepended PATH with "%*"
+
+:: Update PATH environment variable in current session after successfully added
+set PATH=%PATH_BAK%
+
+exit /b %ERRORLEVEL%

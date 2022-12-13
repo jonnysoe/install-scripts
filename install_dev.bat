@@ -497,13 +497,13 @@ if %ERRORLEVEL% neq 0 goto failInstall
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add Github.com as known host
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n "`grep -m1 github.com ~/.ssh/known_hosts`" ]] || ssh-keyscan github.com >> ~/.ssh/known_hosts"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n \"`grep -m1 github.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan github.com >> ~/.ssh/known_hosts"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add Gitlab.com as known host
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n "`grep -m1 gitlab.com ~/.ssh/known_hosts`" ]] || ssh-keyscan gitlab.com >> ~/.ssh/known_hosts"
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n \"`grep -m1 gitlab.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan gitlab.com >> ~/.ssh/known_hosts"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -619,6 +619,9 @@ if not exist %VSCODE_SETTINGS% (
     echo     "C_Cpp.autoAddFileAssociations": false,
     echo     "explorer.confirmDragAndDrop": false,
     echo     "terminal.integrated.scrollback": 1000000,
+    echo     "bookmarks.navigateThroughAllFiles": true,
+    echo     "bookmarks.saveBookmarksInProject": true,
+    echo     "bookmarks.wrapNavigation": true,
     echo }
 ) > %VSCODE_SETTINGS%
 
@@ -683,6 +686,9 @@ call "%CODE_EXE%" --force --install-extension formulahendry.auto-complete-tag
 
 :: ES6 - JavaScript/TypeScript
 call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
+
+:: Bookmarks
+call "%CODE_EXE%" --force --install-extension alefragnani.Bookmarks
 
 :: ===================================================================
 :: Start of OpenVPN Installation

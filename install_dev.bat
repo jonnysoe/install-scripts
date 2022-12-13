@@ -13,7 +13,10 @@ if %ERRORLEVEL% neq 0 goto failAdmin
 
 :: Set PATH again to change registry type from REG_EXPAND_SZ to REG_SZ type
 :: This can help Windows that never used `setx /m PATH` as variable expansion from string is difficult
-setx /m PATH "%PATH%" > nul
+:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
+reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" | findstr "REG_SZ" > nul
+
+if %ERRORLEVEL% neq 0 setx /m PATH "%PATH%" > nul
 
 :: Installer paths
 :: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
@@ -148,13 +151,10 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: ===================================================================
 :checkGit
 
-:: Latest MSYS2 is having compatibility issue with Git for Windows
-goto endGit
-
-set GIT_EXE="C:\Program Files\Git\cmd\git.exe"
+set GIT_EXE=%PROGRAMFILES%\Git\cmd\git.exe
 
 :: git fullpath exists, git has been installed, so skip
-if exist %GIT_EXE% goto endGit
+if exist "%GIT_EXE%" goto endGit
 
 :: Skip to install if installer already exist
 if exist %GIT_INSTALLER% goto installGit
@@ -381,6 +381,18 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
+:: Add Github.com as known host
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n "`grep -m1 github.com ~/.ssh/known_hosts`" ]] || ssh-keyscan github.com >> ~/.ssh/known_hosts"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Add Gitlab.com as known host
+%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n "`grep -m1 gitlab.com ~/.ssh/known_hosts`" ]] || ssh-keyscan gitlab.com >> ~/.ssh/known_hosts"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
 :: Symlink directories in MSYS2 to Windows' (Git Bash) user directory to share directories
 :: NOTE: This needs to be Windows' symlink to be visible in Windows
 mklink /D "%USERPROFILE%\.ssh" "%MSYS2_FULLPATH%\home\%USERNAME%\.ssh" > nul 2>&1
@@ -441,7 +453,6 @@ set VSCODE_SETTINGS=%VSCODE_SETTINGS_DIR%\settings.json
 
 :: file doesn't exist, touch file
 if not exist %VSCODE_SETTINGS% (
-    rem type nul > %VSCODE_SETTINGS%
     echo {
     echo     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
     echo     "tabnine.experimentalAutoImports": true,
@@ -580,7 +591,7 @@ if %ERRORLEVEL% neq 0 goto failInstall
 
 :installOvpn
 echo Installing OpenVPN...
-start /wait MsiExec.exe /i %OVPN_INSTALLER% /qn
+call MsiExec.exe /i %OVPN_INSTALLER% /qn
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -639,7 +650,7 @@ for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\Current
 
 :: Remove "Key" and "Type" from Registry Query
 :: https://stackoverflow.com/a/23600965/19336104
-set PATH=%PATH_REG:*REG_SZ    =%
+set PATH=%PATH_REG:*SZ    =%
 
 :: Skip adding to PATH variable if its already added
 echo %PATH% | findstr /c:"%*" > nul
@@ -667,7 +678,7 @@ for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\Current
 
 :: Remove "Key" and "Type" from Registry Query
 :: https://stackoverflow.com/a/23600965/19336104
-set PATH=%PATH_REG:*REG_SZ    =%
+set PATH=%PATH_REG:*SZ    =%
 
 :: Skip adding to PATH variable if its already added
 echo %PATH% | findstr /c:"%*" > nul

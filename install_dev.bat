@@ -24,6 +24,9 @@ set SZ_INSTALLER=7z.msi
 set ARIA2_INSTALLER=aria2.zip
 set GIT_INSTALLER=GitSetup.exe
 set MSVC_INSTALLER=vs_BuildTools.exe
+set LLVM_INSTALLER=LLVM-win64.exe
+set CMAKE_INSTALLER=cmake-windows.msi
+set NINJA_INSTALLER=ninja-win.zip
 set PYTHON_INSTALLER=python-amd64.exe
 set NODEJS_INSTALLER=node-x64.msi
 set VSCODE_INSTALLER=VSCodeSetup.exe
@@ -100,8 +103,7 @@ curl -L -o %ARIA2_INSTALLER% "https://github.com/aria2/aria2/releases/download/r
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :installAria2
-start /wait MsiExec.exe /i %ARIA2_INSTALLER% /qn
-call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%PROGRAMFILES%\aria2"
+call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%ARIA2_FULLPATH%"
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -207,6 +209,119 @@ if %ERRORLEVEL% neq 0 goto failInstall
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endMsvc
+
+:: ===================================================================
+:: Start of LLVM Installation
+:: ===================================================================
+:checkLlvm
+
+set LLVM_FULLPATH=%PROGRAMFILES%\LLVM\bin
+
+:: fullpath exists, git has been installed, so skip
+if exist "%LLVM_FULLPATH%\clang++.exe" goto configLlvm
+
+:: Skip to install if installer already exist
+if exist %LLVM_INSTALLER% goto installLlvm
+
+:downloadLlvm
+echo Downloading LLVM...
+:: https://github.com/llvm/llvm-project/releases/latest
+call "%ARIA2_EXE%" -o %LLVM_INSTALLER% "https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.6/LLVM-15.0.6-win64.exe"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installLlvm
+echo Installing LLVM...
+:: https://silentinstallhq.com/llvm-silent-install-how-to-guide/
+call %LLVM_INSTALLER% /S
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configLlvm
+:: Add to PATH environment variable
+call:appendPath %LLVM_FULLPATH%
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endLlvm
+
+:: ===================================================================
+:: Start of CMake Installation
+:: ===================================================================
+:checkCmake
+
+set CMAKE_FULLPATH=%PROGRAMFILES%\CMake\bin
+
+:: fullpath exists, git has been installed, so skip
+if exist "%CMAKE_FULLPATH%\cmake.exe" goto configCmake
+
+:: Skip to install if installer already exist
+if exist %CMAKE_INSTALLER% goto installCmake
+
+:downloadCmake
+echo Downloading CMake...
+:: https://github.com/Kitware/CMake/releases/latest
+call "%ARIA2_EXE%" -o %CMAKE_INSTALLER% "https://github.com/Kitware/CMake/releases/download/v3.25.1/cmake-3.25.1-windows-x86_64.msi"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installCmake
+echo Installing CMake...
+:: https://silentinstallhq.com/cmake-silent-install-how-to-guide/
+start /wait MsiExec.exe /i %CMAKE_INSTALLER% /qn
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configCmake
+:: Add to PATH environment variable
+call:appendPath %CMAKE_FULLPATH%
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endCmake
+
+:: ===================================================================
+:: Start of Ninja Installation
+:: ===================================================================
+:checkNinja
+
+set NINJA_FULLPATH=%PROGRAMFILES%\Ninja
+
+:: fullpath exists, git has been installed, so skip
+if exist "%NINJA_FULLPATH%\ninja.exe" goto configNinja
+
+:: Skip to install if installer already exist
+if exist %NINJA_INSTALLER% goto installNinja
+
+:downloadNinja
+echo Downloading Ninja...
+:: https://github.com/ninja-build/ninja/releases/latest
+call "%ARIA2_EXE%" -o %NINJA_INSTALLER% "https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installNinja
+echo Installing Ninja...
+call "%SZ_EXE%" e %NINJA_INSTALLER% -o"%NINJA_FULLPATH%"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configNinja
+:: Add to PATH environment variable
+call:appendPath %NINJA_FULLPATH%
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endNinja
 
 :: ===================================================================
 :: Start of Python Installation
@@ -503,6 +618,7 @@ if not exist %VSCODE_SETTINGS% (
     echo     "prettier.useTabs": false,
     echo     "C_Cpp.autoAddFileAssociations": false,
     echo     "explorer.confirmDragAndDrop": false,
+    echo     "terminal.integrated.scrollback": 1000000,
     echo }
 ) > %VSCODE_SETTINGS%
 

@@ -27,6 +27,7 @@ set MSVC_INSTALLER=vs_BuildTools.exe
 set LLVM_INSTALLER=LLVM-win64.exe
 set CMAKE_INSTALLER=cmake-windows.msi
 set NINJA_INSTALLER=ninja-win.zip
+set CCACHE_INSTALLER=ccache-x86_64.zip
 set PYTHON_INSTALLER=python-amd64.exe
 set NODEJS_INSTALLER=node-x64.msi
 set VSCODE_INSTALLER=VSCodeSetup.exe

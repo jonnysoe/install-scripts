@@ -351,13 +351,13 @@ if %ERRORLEVEL% neq 0 goto failInstall
 
 :configPython
 :: Add to PATH environment variable
-call:appendPath %PYTHON_FULLPATH%
+call:prependPath %PYTHON_FULLPATH%
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add to PATH environment variable
-call:appendPath %PIP_FULLPATH%
+call:prependPath %PIP_FULLPATH%
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -763,56 +763,73 @@ goto endInstall
 :: ===================================================================
 :appendPath
 :: Do not add invalid Path
-if not exist "%*" exit /b %ERRORLEVEL%
+call:pathExist %*
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Always check for the PATH environment variable from registry for the latest values
 :: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
 :: https://stackoverflow.com/a/6362922/19336104
-for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%F
-
-:: Remove "Key" and "Type" from Registry Query
-:: https://stackoverflow.com/a/23600965/19336104
-set PATH=%PATH_REG:*SZ    =%
+for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%b
 
 :: Skip adding to PATH variable if its already added
-echo %PATH% | findstr /c:"%*" > nul
+echo %PATH_REG% | findstr /c:"%*" > nul
 if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
 
-:: Attempt with a backup variable, to ensure PATH is synchronized
-set PATH_BAK=%PATH%;%*
-setx /m PATH "%PATH_BAK%" > nul
+:: Modify registry value
+set PATH_REG=%PATH_REG%;%*
+
+:: Update PATH registry - add overwrite
+:: https://stackoverflow.com/a/35248331/19336104
+:: Do not use `setx /m` as it will demote the registry to REG_SZ which can no longer add variable-based PATH
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH_REG%" /f > nul
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-echo Appended PATH with "%*"
+
+:: Get User PATH
+:: https://superuser.com/a/1017930
+for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_CURRENT_USER\Environment" /v "Path"`) do set USER_PATH=%%b
 
 :: Update PATH environment variable in current session after successfully added
-set PATH=%PATH_BAK%
+call:setPath %PATH_REG%;%*;%USER_PATH%
 
 exit /b %ERRORLEVEL%
 
 :prependPath
 :: Do not add invalid Path
-if not exist "%*" exit /b %ERRORLEVEL%
+call:pathExist %*
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Always check for the PATH environment variable from registry for the latest values
 :: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
 :: https://stackoverflow.com/a/6362922/19336104
-for /f "tokens=* USEBACKQ" %%F in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%F
-
-:: Remove "Key" and "Type" from Registry Query
-:: https://stackoverflow.com/a/23600965/19336104
-set PATH=%PATH_REG:*SZ    =%
+for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%b
 
 :: Skip adding to PATH variable if its already added
-echo %PATH% | findstr /c:"%*" > nul
+echo %PATH_REG% | findstr /c:"%*" > nul
 if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
 
-:: Attempt with a backup variable, to ensure PATH is synchronized
-set PATH_BAK=%*;%PATH%
-setx /m PATH "%PATH_BAK%" > nul
+:: Modify registry value
+set PATH_REG=%*;%PATH_REG%
+
+:: Update PATH registry - add overwrite
+:: https://stackoverflow.com/a/35248331/19336104
+:: Do not use `setx /m` as it will demote the registry to REG_SZ which can no longer add variable-based PATH
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH_REG%" /f > nul
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-echo Prepended PATH with "%*"
+
+:: Get User PATH
+:: https://superuser.com/a/1017930
+for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_CURRENT_USER\Environment" /v "Path"`) do set USER_PATH=%%b
 
 :: Update PATH environment variable in current session after successfully added
-set PATH=%PATH_BAK%
+call:setPath %PATH_REG%;%*;%USER_PATH%
 
 exit /b %ERRORLEVEL%
+
+:: This will expand the string containing variable before checking its existence
+:pathExist
+if exist "%*" exit /b 0
+exit /b 1
+
+:: This will expand the string containing variable before setting PATH variable for current session
+:setPath
+set PATH=%*

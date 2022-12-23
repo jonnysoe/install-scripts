@@ -182,12 +182,11 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :: Start of Microsoft C++ Build Tools Installation
 :: ===================================================================
 :checkMsvc
-goto endMsvc
 
-set MSVC_FULLPATH=%PROGRAMFILES%\Microsoft Visual Studio
+set MSVC_FULLPATH=%PROGRAMFILES(x86)%\Microsoft Visual Studio
 
 :: MSVC fullpath exists, git has been installed, so skip
-if exist %MSVC_FULLPATH% goto endMsvc
+if exist "%MSVC_FULLPATH%" goto endMsvc
 
 :: Skip to install if installer already exist
 if exist %MSVC_INSTALLER% goto installMsvc
@@ -202,8 +201,9 @@ if %ERRORLEVEL% neq 0 goto failInstall
 :installMsvc
 :: https://dimitri.janczak.net/2018/10/22/visual-c-build-tools-silent-installation/
 :: https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
-:: Let this run in the background, add "--wait" if there are MSVC dependencies in the future
-%MSVC_INSTALLER% --layout .\vs_buildtools --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --quiet --norestart
+:: MSVC and Windows SDK is required for LLVM
+echo Installing MSVC...
+call %MSVC_INSTALLER% --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --passive --norestart --wait
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -322,6 +322,43 @@ call:appendPath %NINJA_FULLPATH%
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :endNinja
+
+:: ===================================================================
+:: Start of Ccache Installation
+:: ===================================================================
+:checkCcache
+
+set CCACHE_FULLPATH=%PROGRAMFILES%\Ccache
+
+:: Program installed, so skip
+if exist "%CCACHE_FULLPATH%\ccache.exe" goto configCcache
+
+:: Skip to install if installer already exist
+if exist %CCACHE_INSTALLER% goto installCcache
+
+:downloadCcache
+echo Downloading Ccache...
+:: https://github.com/ccache/ccache/releases/latest
+call "%ARIA2_EXE%" -o %CCACHE_INSTALLER% "https://github.com/ccache/ccache/releases/download/v4.7.4/ccache-4.7.4-windows-x86_64.zip"
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:installCcache
+echo Installing Ccache...
+call "%SZ_EXE%" e %CCACHE_INSTALLER% -o"%CCACHE_FULLPATH%"
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:configCcache
+:: Add to PATH environment variable
+call:appendPath %%PROGRAMFILES%%\Ccache
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:endCcache
 
 :: ===================================================================
 :: Start of Python Installation

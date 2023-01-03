@@ -11,13 +11,6 @@ net session >nul 2>&1
 :: Fail if not running as Administrator
 if %ERRORLEVEL% neq 0 goto failAdmin
 
-:: Set PATH again to change registry type from REG_EXPAND_SZ to REG_SZ type
-:: This can help Windows that never used `setx /m PATH` as variable expansion from string is difficult
-:: https://social.technet.microsoft.com/Forums/en-US/fed3975d-e1cf-4633-a37b-4e0948ac8eae/source-locations-for-path-variable-entries
-reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" | findstr "REG_SZ" > nul
-
-if %ERRORLEVEL% neq 0 setx /m PATH "%PATH%" > nul
-
 :: Installer paths
 :: NOTE: %7 is an input in batch script, so using 'S' to indicate '7' in "7-Zip"
 set SZ_INSTALLER=7z.msi

@@ -459,9 +459,15 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: Install
 echo Installing pthreads . . .
 
+:: Extract
+if not exist pthreads4w call "%SZ_EXE%" x pthreads4w.zip -o"pthreads4w"
+
+:: Fail if extraction fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
 :: Build pthreads
 pushd pthreads4w\pthreads4w-main
-call compile.bat all install
+if not exist ..\PTHREADS-BUILT call compile.bat all install
 popd
 
 :: Failed to build pthreads

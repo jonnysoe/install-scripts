@@ -22,20 +22,20 @@ set OVPN_INSTALLER=openvpn.msi
 :: Common fullpaths
 :: fresh installation with registry update will no be reflected in current cmd session
 :: Rerunning this script will not have new PATH included
-set SZ_FULLPATH=%PROGRAMFILES%\7-Zip
-set ARIA2_FULLPATH=%PROGRAMFILES%\aria2
-set PTTB_FULLPATH=%PROGRAMFILES%\pttb
+set SZ_FULLPATH=%ProgramFiles%\7-Zip
+set ARIA2_FULLPATH=%ProgramFiles%\aria2
+set PTTB_FULLPATH=%ProgramFiles%\pttb
 :: Do not use 3.11, there is a module bug requiring MSVC, which should never be the case with Python modules
 set PYTHON_PATH=Python310
-set PYTHON_FULLPATH=%PROGRAMFILES%\%PYTHON_PATH%
+set PYTHON_FULLPATH=%ProgramFiles%\%PYTHON_PATH%
 set PIP_FULLPATH=%PYTHON_FULLPATH%\Scripts
-set NODEJS_FULLPATH=%PROGRAMFILES%\nodejs
+set NODEJS_FULLPATH=%ProgramFiles%\nodejs
 set SZ_EXE=%SZ_FULLPATH%\7z.exe
 set ARIA2_EXE=%ARIA2_FULLPATH%\aria2c.exe
 set PTTB_EXE=%PTTB_FULLPATH%\pttb.exe
 set PYTHON_EXE=%PYTHON_FULLPATH%\python.exe
 set PIP_EXE=%PIP_FULLPATH%\pip.exe
-set CODE_EXE=%PROGRAMFILES%\Microsoft VS Code\bin\code
+set CODE_EXE=%ProgramFiles%\Microsoft VS Code\bin\code
 
 pushd %USERPROFILE%\Downloads
 call:installAll
@@ -82,6 +82,9 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 call:installConfigMake
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
+call:installConfigPkgconf
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
 call:installConfigPthreads
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
@@ -116,7 +119,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :config7z
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\7-Zip
+call:appendPath %%%%ProgramFiles%%%%\7-Zip
 
 exit /b %ERRORLEVEL%
 
@@ -145,7 +148,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configAria2
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\aria2
+call:appendPath %%%%ProgramFiles%%%%\aria2
 
 exit /b %ERRORLEVEL%
 
@@ -175,7 +178,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configPttb
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\pttb
+call:appendPath %%%%ProgramFiles%%%%\pttb
 
 exit /b %ERRORLEVEL%
 
@@ -195,7 +198,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigGit
 
-set GIT_EXE=%PROGRAMFILES%\Git\cmd\git.exe
+set GIT_EXE=%ProgramFiles%\Git\cmd\git.exe
 
 if not exist "%GIT_EXE%" call:installGit
 
@@ -204,7 +207,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configGit
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\Git\cmd
+call:appendPath %%%%ProgramFiles%%%%\Git\cmd
 
 exit /b %ERRORLEVEL%
 
@@ -228,7 +231,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigMsvc
 
-set MSVC_FULLPATH=%PROGRAMFILES(x86)%\Microsoft Visual Studio
+set MSVC_FULLPATH=%ProgramFiles(x86)%\Microsoft Visual Studio
 
 if not exist "%MSVC_FULLPATH%" call:installMsvc
 
@@ -260,7 +263,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigLlvm
 
-set LLVM_FULLPATH=%PROGRAMFILES%\LLVM\bin
+set LLVM_FULLPATH=%ProgramFiles%\LLVM\bin
 
 if not exist "%LLVM_FULLPATH%\clang++.exe" call:installLlvm
 
@@ -269,7 +272,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configLlvm
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\LLVM\bin
+call:appendPath %%%%ProgramFiles%%%%\LLVM\bin
 
 exit /b %ERRORLEVEL%
 
@@ -295,7 +298,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigCmake
 
-set CMAKE_FULLPATH=%PROGRAMFILES%\CMake\bin
+set CMAKE_FULLPATH=%ProgramFiles%\CMake\bin
 
 if not exist "%CMAKE_FULLPATH%\cmake.exe" call:installCmake
 
@@ -304,7 +307,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configCmake
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\CMake\bin
+call:appendPath %%%%ProgramFiles%%%%\CMake\bin
 
 exit /b %ERRORLEVEL%
 
@@ -330,7 +333,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigNinja
 
-set NINJA_FULLPATH=%PROGRAMFILES%\Ninja
+set NINJA_FULLPATH=%ProgramFiles%\Ninja
 
 if not exist "%NINJA_FULLPATH%\ninja.exe" call:installNinja
 
@@ -339,7 +342,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configNinja
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\Ninja
+call:appendPath %%%%ProgramFiles%%%%\Ninja
 
 exit /b %ERRORLEVEL%
 
@@ -364,7 +367,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigCcache
 
-set CCACHE_FULLPATH=%PROGRAMFILES%\Ccache
+set CCACHE_FULLPATH=%ProgramFiles%\Ccache
 
 if not exist "%CCACHE_FULLPATH%\ccache.exe" call:installCcache
 
@@ -373,7 +376,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configCcache
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\Ccache
+call:appendPath %%%%ProgramFiles%%%%\Ccache
 
 exit /b %ERRORLEVEL%
 
@@ -407,15 +410,13 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configMake
 :: Add to PATH environment variable
-call:appendPath %%ProgramFiles(x86)%%\GnuWin32\bin
+call:appendPath %%%%ProgramFiles(x86)%%%%\GnuWin32\bin
 
 :: Somehow (x86) path is buggy - does not exist
 set ERRORLEVEL=0
 exit /b 0
 
 :installMake
-
-:: Download if not installed
 :: https://gnuwin32.sourceforge.net/packages/make.htm
 echo Downloading GNU Make . . .
 call:download "https://jaist.dl.sourceforge.net/project/gnuwin32/make/3.81/make-3.81.exe" %MAKE_INSTALLER%
@@ -435,7 +436,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigPthreads
 
-set PTHREADS_FULLPATH=%PROGRAMFILES%\pthreads
+set PTHREADS_FULLPATH=%ProgramFiles%\pthreads
 
 if not exist "%PTHREADS_FULLPATH%" call:installPthreads
 
@@ -444,25 +445,30 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configPthreads
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\pthreads
+call:appendPath %%%%ProgramFiles%%%%\pthreads
 
 exit /b %ERRORLEVEL%
 
 :installPthreads
 echo Downloading pthreads . . .
-if not exist pthreads4w call git clone https://github.com/jonnysoe/pthreads4w.git
+call:download "https://github.com/jonnysoe/pthreads4w/archive/refs/heads/main.zip" pthreads4w.zip
+
+:: Fail if download fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-:: Build pthreads
+:: Install
 echo Installing pthreads . . .
-pushd pthreads4w
+
+:: Build pthreads
+pushd pthreads4w\pthreads4w-main
 call compile.bat all install
 popd
 
 :: Failed to build pthreads
-if not exist PTHREADS-BUILT exit /b 1
+if not exist pthreads4w\PTHREADS-BUILT exit /b 1
 
-xcopy PTHREADS-BUILT "%PTHREADS_FULLPATH%" /E /C /I /Q /Y
+:: Copy and rename
+xcopy pthreads4w\PTHREADS-BUILT "%PTHREADS_FULLPATH%" /E /C /I /Q /Y
 
 exit /b %ERRORLEVEL%
 
@@ -471,7 +477,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigZlib
 
-set ZLIB_FULLPATH=%PROGRAMFILES%\zlib
+set ZLIB_FULLPATH=%ProgramFiles%\zlib
 
 if not exist "%ZLIB_FULLPATH%" call:installZlib
 
@@ -480,7 +486,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configZlib
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\zlib
+call:appendPath %%%%ProgramFiles%%%%\zlib
 
 exit /b %ERRORLEVEL%
 
@@ -500,11 +506,11 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing Zlib . . .
-if not exist "%PROGRAMFILES%\zlib" mkdir "%PROGRAMFILES%\zlib"
-if not exist "%PROGRAMFILES%\zlib\include" mkdir "%PROGRAMFILES%\zlib\include"
-call "%SZ_EXE%" x zlib123.zip -o"%PROGRAMFILES%\zlib\include"
-call "%SZ_EXE%" x zlib123dllx64.zip -o"%PROGRAMFILES%\zlib"
-pushd "%PROGRAMFILES%\zlib\"
+mkdir "%ProgramFiles%\zlib" > nul 2>&1
+mkdir "%ProgramFiles%\zlib\include" > nul 2>&1
+call "%SZ_EXE%" x zlib123.zip -o"%ProgramFiles%\zlib\include"
+call "%SZ_EXE%" x zlib123dllx64.zip -o"%ProgramFiles%\zlib"
+pushd "%ProgramFiles%\zlib\"
 rename static_x64 lib
 rename dll_x64 bin
 popd
@@ -523,13 +529,13 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configPython
 :: Add to PATH environment variable
-call:prependPath %%PROGRAMFILES%%\%PYTHON_PATH%
+call:prependPath %%%%ProgramFiles%%%%\%PYTHON_PATH%
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
 
 :: Add to PATH environment variable
-call:prependPath %%PROGRAMFILES%%\%PYTHON_PATH%\Scripts
+call:prependPath %%%%ProgramFiles%%%%\%PYTHON_PATH%\Scripts
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 goto failInstall
@@ -567,7 +573,7 @@ echo Configuring Nodejs . . .
 PowerShell -Command "Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force"
 
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\nodejs
+call:appendPath %%%%ProgramFiles%%%%\nodejs
 
 :: Fail if append fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
@@ -714,7 +720,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :configVscode
 echo Configuring VS Code . . .
 :: Add to PATH environment variable
-call:appendPath %%PROGRAMFILES%%\Microsoft VS Code\bin\code
+call:appendPath %%%%ProgramFiles%%%%\Microsoft VS Code
 
 set VSCODE_SETTINGS_DIR=%APPDATA%\Code\User
 mkdir %VSCODE_SETTINGS_DIR% > nul 2>&1
@@ -880,7 +886,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigOvpn
 
-set OVPN_EXE="%PROGRAMFILES%\OpenVPN\bin\openvpn-gui.exe"
+set OVPN_EXE="%ProgramFiles%\OpenVPN\bin\openvpn-gui.exe"
 
 if not exist %OVPN_EXE% call:installOvpn
 
@@ -979,12 +985,22 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: https://stackoverflow.com/a/6362922/19336104
 for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%b
 
+:: Check if PATH is already added
+:: NOTE: "findstr" on string have character limit - including "/g", so push to file then read into variable instead
+::       Need to echo without line break to work
+echo|set /p="%PATH_REG%" > temp.txt
+echo temp.txt > search.txt
+set FOUND_FILE=
+for /f "tokens=* USEBACKQ" %%A in (`findstr /f:search.txt /c:"%*" /m`) do set FOUND_FILE=%%A
+del temp.txt search.txt
+
 :: Skip adding to PATH variable if its already added
-echo %PATH_REG% | findstr /c:"%*" > nul
-if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
+if "%FOUND_FILE%" neq "" exit /b 0
+
+:: Remove trailing ;
+if "%PATH_REG:~-1%"==";" set PATH_REG=%PATH_REG:~0,-1%
 
 :: Modify registry value
-echo PATH_REG=%PATH_REG%;%*
 set PATH_REG=%PATH_REG%;%*
 
 :: Update PATH registry - add overwrite
@@ -992,6 +1008,8 @@ set PATH_REG=%PATH_REG%;%*
 :: Do not use `setx /m` as it will demote the registry to REG_SZ which can no longer add variable-based PATH
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH_REG%" /f > nul
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+echo Appended PATH: %*
 
 :: Get User PATH
 :: https://superuser.com/a/1017930
@@ -1012,9 +1030,20 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: https://stackoverflow.com/a/6362922/19336104
 for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path"`) do set PATH_REG=%%b
 
+:: Check if PATH is already added
+:: NOTE: "findstr" on string have character limit - including "/g", so push to file then read into variable instead
+::       Need to echo without line break to work
+echo|set /p="%PATH_REG%" > temp.txt
+echo temp.txt > search.txt
+set FOUND_FILE=
+for /f "tokens=* USEBACKQ" %%A in (`findstr /f:search.txt /c:"%*" /m`) do set FOUND_FILE=%%A
+del temp.txt search.txt
+
 :: Skip adding to PATH variable if its already added
-echo %PATH_REG% | findstr /c:"%*" > nul
-if %ERRORLEVEL%==0 exit /b %ERRORLEVEL%
+if "%FOUND_FILE%" neq "" exit /b 0
+
+:: Remove trailing ;
+if "%PATH_REG:~-1%"==";" set PATH_REG=%PATH_REG:~0,-1%
 
 :: Modify registry value
 set PATH_REG=%*;%PATH_REG%
@@ -1024,6 +1053,8 @@ set PATH_REG=%*;%PATH_REG%
 :: Do not use `setx /m` as it will demote the registry to REG_SZ which can no longer add variable-based PATH
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "Path" /t REG_EXPAND_SZ /d "%PATH_REG%" /f > nul
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+echo Prepended PATH: %*
 
 :: Get User PATH
 :: https://superuser.com/a/1017930

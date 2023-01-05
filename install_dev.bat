@@ -432,6 +432,46 @@ call %MAKE_INSTALLER% /SP- /VERYSILENT /NORESTART /SUPPRESSMSGBOXES /MERGETASKS=
 exit /b %ERRORLEVEL%
 
 :: ===================================================================
+:: Start of pkg-config Installation
+:: ===================================================================
+:installConfigPkgconf
+set PKGCONF_FULLPATH=%ProgramFiles%\pkg-config
+
+if not exist "%PKGCONF_FULLPATH%\bin\pkg-config.exe" call:installPkgconf
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configPkgconf
+:: Add to PATH environment variable
+call:appendPath %%%%ProgramFiles%%%%\pkg-config\bin
+
+exit /b %ERRORLEVEL%
+
+:installPkgconf
+echo Downloading pkg-config . . .
+set PKGCONF_INSTALLER=pkgconf.zip
+call:download "https://jaist.dl.sourceforge.net/project/pkgconfiglite/0.28-1/pkg-config-lite-0.28-1_bin-win32.zip" %PKGCONF_INSTALLER%
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Extract
+if not exist pkg-config call "%SZ_EXE%" x %PKGCONF_INSTALLER% -o"pkg-config"
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Install
+set PKGCONF_DIR=
+for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b pkg-config`) do set PKGCONF_DIR=%%A
+if "%PKGCONF_DIR%"=="" exit /b 1
+
+:: Copy and rename
+echo Installing pkg-config . . .
+xcopy pkg-config\%PKGCONF_DIR% "%PKGCONF_FULLPATH%" /E /C /I /Q /Y
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
 :: Start of pthreads4w Installation
 :: ===================================================================
 :installConfigPthreads

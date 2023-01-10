@@ -1302,7 +1302,7 @@ echo Prepended PATH: %*
 for /f "tokens=2* USEBACKQ" %%a in (`reg query "HKEY_CURRENT_USER\Environment" /v "Path"`) do set USER_PATH=%%b
 
 :: Update PATH environment variable in current session after successfully added
-call:setPath %PATH_REG%;%*;%USER_PATH%
+call:setPath %*;%PATH_REG%;%USER_PATH%
 
 exit /b %ERRORLEVEL%
 

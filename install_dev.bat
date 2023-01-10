@@ -37,15 +37,16 @@ set PYTHON_EXE=%PYTHON_FULLPATH%\python.exe
 set PIP_EXE=%PIP_FULLPATH%\pip.exe
 set CODE_EXE=%ProgramFiles%\Microsoft VS Code\bin\code
 
-pushd %USERPROFILE%\Downloads
+mkdir "%USERPROFILE%\Downloads\temp" > nul 2>&1
+pushd %USERPROFILE%\Downloads\temp
 call:installAll
 set ERROR_RETURN=%ERRORLEVEL%
+popd
 if %ERROR_RETURN%==0 (
     call:displaySshKey
     call:deleteInstallers
 )
-popd
-echo Exiting Installation Script...
+echo Exiting Installation Script . . .
 exit /b %ERROR_RETURN%
 
 :: ===================================================================
@@ -61,7 +62,13 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 call:installConfigAria2
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
+call:installConfigWget
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
 call:installConfigPttb
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+call:installConfigGit
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 call:installConfigMsvc
@@ -91,14 +98,26 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 call:installConfigZlib
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
+call:installConfigFlexBison
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+call:installConfigTbb
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+call:installConfigEigen
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+call:installConfigPerl
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
 call:installConfigPython
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 call:installConfigNodejs
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-call:installConfigMsys2
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+:: call:installConfigMsys2
+:: if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 call:installConfigVscode
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
@@ -168,6 +187,29 @@ call "%SZ_EXE%" x %ARIA2_INSTALLER% -o"%ARIA2_FULLPATH%"
 exit /b %ERRORLEVEL%
 
 :: ===================================================================
+:: Start of wget Installation
+:: ===================================================================
+:installConfigWget
+if not exist "%ProgramFiles%\wget\wget.exe" call:installWget
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configWget
+:: Add to PATH environment variable
+call:appendPath %%%%ProgramFiles%%%%\wget
+
+exit /b %ERRORLEVEL%
+
+:installWget
+
+:: Download
+echo Downloading wget . . .
+call "%ARIA2_EXE%" -d "%ProgramFiles%\wget" -o wget.exe "https://eternallybored.org/misc/wget/1.21.3/64/wget.exe"
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
 :: Start of Pin to TaskBar Installation
 :: ===================================================================
 :installConfigPttb
@@ -206,6 +248,7 @@ if not exist "%GIT_EXE%" call:installGit
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configGit
+echo Configuring Git . . .
 :: Add to PATH environment variable
 call:appendPath %%%%ProgramFiles%%%%\Git\cmd
 
@@ -243,7 +286,7 @@ exit /b %ERRORLEVEL%
 :installMsvc
 
 :: Download if not installed
-echo Downloading Microsoft C++ Build Tools...
+echo Downloading Microsoft C++ Build Tools . . .
 call:download "https://aka.ms/vs/17/release/vs_BuildTools.exe" %MSVC_INSTALLER%
 
 :: Fail if download fails
@@ -253,7 +296,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: https://dimitri.janczak.net/2018/10/22/visual-c-build-tools-silent-installation/
 :: https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
 :: MSVC and Windows SDK is required for LLVM
-echo Installing Microsoft C++ Build Tools...
+echo Installing Microsoft C++ Build Tools . . .
 call %MSVC_INSTALLER% --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional --passive --norestart --wait
 
 exit /b %ERRORLEVEL%
@@ -486,6 +529,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :configPthreads
 :: Add to PATH environment variable
 call:appendPath %%%%ProgramFiles%%%%\pthreads
+call:appendPath %%%%ProgramFiles%%%%\pthreads\bin
 
 exit /b %ERRORLEVEL%
 
@@ -560,6 +604,162 @@ pushd "%ProgramFiles%\zlib\"
 rename static_x64 lib
 rename dll_x64 bin
 popd
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
+:: Start of Flex/Bison Installation
+:: ===================================================================
+:installConfigFlexBison
+
+if not exist "%ProgramFiles%\win_flex_bison" call:installFlexBison
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configFlexBison
+:: Add to PATH environment variable
+call:appendPath %%%%ProgramFiles%%%%\win_flex_bison
+
+exit /b %ERRORLEVEL%
+
+:installFlexBison
+echo Downloading Flex/Bison . . .
+call:download "https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip" win_flex_bison.zip
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Install
+echo Installing Flex/Bison . . .
+if not exist "%ProgramFiles%\win_flex_bison" call "%SZ_EXE%" x win_flex_bison.zip -o"%ProgramFiles%\win_flex_bison"
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
+:: Start of Intel Thread Building Block Installation
+:: ===================================================================
+:installConfigTbb
+
+set TBB_FULLPATH=%ProgramFiles%\tbb
+
+if not exist "%TBB_FULLPATH%" call:installTbb
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configTbb
+
+:: Add to PATH environment variable
+call:appendPath %%%%ProgramFiles%%%%\tbb
+call:appendPath %%%%ProgramFiles%%%%\tbb\cmake
+call:appendPath %%%%ProgramFiles%%%%\tbb\bin\%TBB_ARCH%\%TBB_VC%
+
+:: Set TBB_ARCH_PLATFORM environment variable
+:: set TBB_ARCH=
+:: set TBB_VC=
+:: if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set TBB_ARCH=intel64
+:: if "%PROCESSOR_ARCHITECTURE%"=="x86" set TBB_ARCH=ia32
+:: :: Use the library that ends with numbers, eg. vc14 instead of vc14_uwp
+:: for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b "%ProgramFiles%\tbb\bin\%TBB_ARCH%" ^| findstr "[0-9]$"`) do set TBB_VC=%%A
+:: if "%TBB_ARCH_PLATFORM%"=="" reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "TBB_ARCH_PLATFORM" /t REG_SZ /d "%TBB_ARCH%" /f
+
+exit /b %ERRORLEVEL%
+
+:installTbb
+
+:: Download
+echo Downloading Intel Thread Building Block . . .
+call:download "https://github.com/oneapi-src/oneTBB/releases/download/v2020.1/tbb-2020.1-win.zip" tbb.zip
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Install
+echo Installing Intel Thread Building Block . . .
+if not exist tbb call "%SZ_EXE%" x tbb.zip -o"tbb"
+
+:: Copy and rename
+if not exist "%ProgramFiles%\tbb" xcopy tbb\tbb "%ProgramFiles%\tbb" /E /C /I /Q /Y
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
+:: Start of Eigen3 Installation
+:: ===================================================================
+:installConfigEigen
+
+set EIGEN_FULLPATH=%ProgramFiles%\eigen
+
+if not exist "%EIGEN_FULLPATH%" call:installEigen
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configEigen
+:: Add to PATH environment variable
+call:appendPath %%%%ProgramFiles%%%%\eigen\cmake
+
+exit /b %ERRORLEVEL%
+
+:installEigen
+
+:: Download
+echo Downloading Eigen3 . . .
+call:download "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip" eigen.zip
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Install
+echo Installing Eigen3 . . .
+if not exist eigen call "%SZ_EXE%" x eigen.zip -o"eigen"
+
+set EIGEN_DIR=
+for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b eigen`) do set EIGEN_DIR=%%A
+if "%EIGEN_DIR%"=="" exit /b 1
+
+:: Copy and rename
+if not exist "%ProgramFiles%\eigen" xcopy eigen\%EIGEN_DIR% "%ProgramFiles%\eigen" /E /C /I /Q /Y
+
+exit /b %ERRORLEVEL%
+
+:: ===================================================================
+:: Start of Perl Installation
+:: ===================================================================
+:installConfigPerl
+
+if not exist "%PYTHON_EXE%" call:installPerl
+
+:: Fail if installation fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:configPerl
+:: Add to PATH environment variable
+call:prependPath C:\Perl64\bin
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+:: Add to PATH environment variable
+call:prependPath C:\Perl64\site\bin
+
+:: Fail if append fails
+if %ERRORLEVEL% neq 0 goto failInstall
+
+exit /b %ERRORLEVEL%
+
+:installPerl
+:: Download
+echo Downloading Perl . . .
+call:download "https://softpedia-secure-download.com/dl/ba1d28dbe63a2268ec0bc75ed65d7ae1/63bcfeaf/100069258/software/programming/ActivePerl-5.28.1.2801-MSWin32-x64-24563874.exe" ActivePerl-x64.exe
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Install
+echo Installing Perl . . .
+call ActivePerl-x64.exe /q
 
 exit /b %ERRORLEVEL%
 
@@ -661,7 +861,7 @@ if not exist %MSYS2_FULLPATH% call:installMsys2
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configMsys2
-echo Configuring MSYS2...
+echo Configuring MSYS2 . . .
 
 :: Add to PATH environment variable
 call:appendPath %%MSYS2_FULLPATH%%\usr\bin
@@ -972,13 +1172,8 @@ exit /b 0
 :: End of Installation
 :: ===================================================================
 :deleteInstallers
-:: Delete Installers and ignore error
-del %SZ_INSTALLER% > nul 2>&1
-del %ARIA2_INSTALLER% > nul 2>&1
-del %GIT_INSTALLER% > nul 2>&1
-del %VSCODE_INSTALLER% > nul 2>&1
-del %MSYS2_INSTALLER% > nul 2>&1
-del %OVPN_INSTALLER% > nul 2>&1
+:: Delete Installers
+rmdir %USERPROFILE%\Downloads\temp /s /q
 
 exit /b 0
 

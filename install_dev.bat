@@ -653,16 +653,15 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: Add to PATH environment variable
 call:appendPath %%%%ProgramFiles%%%%\tbb
 call:appendPath %%%%ProgramFiles%%%%\tbb\cmake
-call:appendPath %%%%ProgramFiles%%%%\tbb\bin\%TBB_ARCH%\%TBB_VC%
 
 :: Set TBB_ARCH_PLATFORM environment variable
-:: set TBB_ARCH=
-:: set TBB_VC=
-:: if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set TBB_ARCH=intel64
-:: if "%PROCESSOR_ARCHITECTURE%"=="x86" set TBB_ARCH=ia32
-:: :: Use the library that ends with numbers, eg. vc14 instead of vc14_uwp
-:: for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b "%ProgramFiles%\tbb\bin\%TBB_ARCH%" ^| findstr "[0-9]$"`) do set TBB_VC=%%A
-:: if "%TBB_ARCH_PLATFORM%"=="" reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "TBB_ARCH_PLATFORM" /t REG_SZ /d "%TBB_ARCH%" /f
+set TBB_ARCH=
+set TBB_VC=
+if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set TBB_ARCH=intel64
+if "%PROCESSOR_ARCHITECTURE%"=="x86" set TBB_ARCH=ia32
+:: Use the library that ends with numbers, eg. vc14 instead of vc14_uwp
+for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b "%ProgramFiles%\tbb\bin\%TBB_ARCH%" ^| findstr "[0-9]$"`) do set TBB_VC=%%A
+call:appendPath %%%%ProgramFiles%%%%\tbb\bin\%TBB_ARCH%\%TBB_VC%
 
 exit /b %ERRORLEVEL%
 

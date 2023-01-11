@@ -182,7 +182,8 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing aria2 . . .
-call "%SZ_EXE%" x %ARIA2_INSTALLER% -o"%ARIA2_FULLPATH%"
+:: Aria2 does not require directory structure
+call "%SZ_EXE%" e %ARIA2_INSTALLER% -o"%ARIA2_FULLPATH%"
 
 exit /b %ERRORLEVEL%
 

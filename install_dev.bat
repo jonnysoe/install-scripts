@@ -56,6 +56,9 @@ exit /b %ERROR_RETURN%
 call:checkAdmin
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
+:: Make a developer directory
+mkdir "%USERPROFILE%\_dev" > nul 2>&1
+
 call:installConfig7z
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
@@ -232,7 +235,15 @@ if not exist "%PTTB_FULLPATH%" mkdir "%PTTB_FULLPATH%"
 
 :: Download
 echo Downloading Pin To Taskbar . . .
-call:download "https://github.com/0x546F6D/pttb_-_Pin_To_TaskBar/raw/main/pttb.exe" pttb.exe -d "%PTTB_FULLPATH%"
+call:download "https://github.com/0x546F6D/pttb_-_Pin_To_TaskBar/raw/main/pttb.exe" pttb.exe
+
+:: Fail if download fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:installPttb
+echo Installing Pin To Taskbar . . .
+mkdir "%PTTB_FULLPATH%" > nul 2>&1
+move /y pttb.exe "%PTTB_FULLPATH%"
 
 exit /b %ERRORLEVEL%
 
@@ -252,6 +263,25 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 echo Configuring Git . . .
 :: Add to PATH environment variable
 call:appendPath %%%%ProgramFiles%%%%\Git\cmd
+
+:: Set username
+set TEMP=
+for /f "tokens=* USEBACKQ" %%A in (`git config --global user.name`) do set TEMP=%%A
+if "%TEMP%"=="" call git config --global user.name %USERNAME%
+
+:: Rebase on Pull
+set TEMP=
+for /f "tokens=* USEBACKQ" %%A in (`git config --global pull.rebase ^| findstr true`) do set TEMP=%%A
+if %ERRORLEVEL% neq 0 call git config --global pull.rebase true
+
+:: Generate SSH Key
+call "%PROGRAMFILES%\Git\bin\sh.exe" --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
+
+:: Add Github.com as known host
+call "%PROGRAMFILES%\Git\bin\sh.exe" --login -c "[[ -n \"`grep -m1 github.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan github.com >> ~/.ssh/known_hosts"
+
+:: Add Gitlab.com as known host
+call "%PROGRAMFILES%\Git\bin\sh.exe" --login -c "[[ -n \"`grep -m1 gitlab.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan gitlab.com >> ~/.ssh/known_hosts"
 
 exit /b %ERRORLEVEL%
 
@@ -436,7 +466,8 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing Ccache . . .
-call "%SZ_EXE%" x %CCACHE_INSTALLER% -o"%CCACHE_FULLPATH%"
+:: Ccache does not require directory structure
+call "%SZ_EXE%" e %CCACHE_INSTALLER% -o"%CCACHE_FULLPATH%"
 
 exit /b %ERRORLEVEL%
 
@@ -912,29 +943,10 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-:: Generate SSH Key
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-
-:: Add Github.com as known host
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n \"`grep -m1 github.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan github.com >> ~/.ssh/known_hosts"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-
-:: Add Gitlab.com as known host
-%MSYS2_FULLPATH%\usr\bin\bash --login -c "[[ -n \"`grep -m1 gitlab.com ~/.ssh/known_hosts`\" ]] || ssh-keyscan gitlab.com >> ~/.ssh/known_hosts"
-
-:: Fail if installation fails
-if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-
 :: Symlink directories in MSYS2 to Windows' (Git Bash) user directory to share directories
 :: NOTE: This needs to be Windows' symlink to be visible in Windows
-mklink /D "%USERPROFILE%\.ssh" "%MSYS2_FULLPATH%\home\%USERNAME%\.ssh" > nul 2>&1
-mkdir "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
-mklink /D "%USERPROFILE%\_dev" "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" > nul 2>&1
+mklink /D "%MSYS2_FULLPATH%\home\%USERNAME%\.ssh" "%USERPROFILE%\.ssh" > nul 2>&1
+mklink /D "%MSYS2_FULLPATH%\home\%USERNAME%\_dev" "%USERPROFILE%\_dev" > nul 2>&1
 
 exit /b %ERRORLEVEL%
 
@@ -1068,6 +1080,9 @@ call "%CODE_EXE%" --force --install-extension actboy168.tasks
 :: Hex Editor support
 call "%CODE_EXE%" --force --install-extension ms-vscode.hexeditor
 
+:: YACC support - flex, bison
+call "%CODE_EXE%" --force --install-extension daohong-emilio.yash
+
 :: Optional: TabNine AI auto completion similar to IntelliSense
 call "%CODE_EXE%" --force --install-extension TabNine.tabnine-vscode
 
@@ -1086,6 +1101,9 @@ call "%CODE_EXE%" --force --install-extension Tobermory.es6-string-html
 
 :: Bookmarks
 call "%CODE_EXE%" --force --install-extension alefragnani.Bookmarks
+
+:: Excel viewer, can be used for csv and tsv files
+call "%CODE_EXE%" --force --install-extension GrapeCity.gc-excelviewer
 
 exit /b 0
 
@@ -1106,7 +1124,7 @@ if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
 
 :: Download
 echo Downloading VS Code . . .
-call:download %VSCODE_INSTALLER% %INSTALLER_LINK%
+call:download %INSTALLER_LINK% %VSCODE_INSTALLER%
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
@@ -1150,7 +1168,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing OpenVPN . . .
-call MsiExec.exe /i %OVPN_INSTALLER% /qn
+start /wait MsiExec.exe /i %OVPN_INSTALLER% /qn
 
 exit /b %ERRORLEVEL%
 
@@ -1163,7 +1181,7 @@ echo Add SSH key, eg:
 echo https://github.com/settings/ssh/new
 echo https://gitlab.com/-/profile/keys
 echo ================================================================================
-type %MSYS2_FULLPATH%\home\%USERNAME%\.ssh\id_rsa.pub
+type %USERPROFILE%\.ssh\id_rsa.pub
 echo ================================================================================
 
 exit /b 0

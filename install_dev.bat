@@ -786,14 +786,15 @@ exit /b %ERRORLEVEL%
 :installPerl
 :: Download
 echo Downloading Perl . . .
-call:download "https://softpedia-secure-download.com/dl/ba1d28dbe63a2268ec0bc75ed65d7ae1/63bcfeaf/100069258/software/programming/ActivePerl-5.28.1.2801-MSWin32-x64-24563874.exe" ActivePerl-x64.exe
+:: https://www.reddit.com/r/perl/comments/l1wv8i/comment/gk1wpje/?utm_source=share&utm_medium=web2x&context=3
+call:download "https://cli-msi.s3.amazonaws.com/ActivePerl-5.28.msi" ActivePerl.msi
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing Perl . . .
-call ActivePerl-x64.exe /q
+start /wait MsiExec.exe /i ActivePerl.msi /qn
 
 exit /b %ERRORLEVEL%
 

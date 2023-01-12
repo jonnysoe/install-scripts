@@ -728,8 +728,7 @@ if not exist "%EIGEN_FULLPATH%" call:installEigen
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :configEigen
-:: Add to PATH environment variable
-call:appendPath %%%%ProgramFiles%%%%\eigen\cmake
+:: Nothing to configure for now as its installed in CMake's share directory
 
 exit /b %ERRORLEVEL%
 
@@ -750,10 +749,14 @@ set EIGEN_DIR=
 for /f "tokens=* USEBACKQ" %%A in (`dir /a:d /b eigen`) do set EIGEN_DIR=%%A
 if "%EIGEN_DIR%"=="" exit /b 1
 
-:: Copy and rename
-if not exist "%ProgramFiles%\eigen" xcopy eigen\%EIGEN_DIR% "%ProgramFiles%\eigen" /E /C /I /Q /Y
+:: Configure CMake install
+pushd  eigen\%EIGEN_DIR%
+cmake -S . -B build --install-prefix "%ProgramFiles%\CMake"
+if %ERRORLEVEL%==0 cmake --install build
+set ERROR_RETURN=%ERRORLEVEL%
+popd
 
-exit /b %ERRORLEVEL%
+exit /b %ERROR_RETURN%
 
 :: ===================================================================
 :: Start of Perl Installation

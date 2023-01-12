@@ -763,7 +763,7 @@ exit /b %ERROR_RETURN%
 :: ===================================================================
 :installConfigPerl
 
-if not exist "%PYTHON_EXE%" call:installPerl
+if not exist "C:\Perl64\bin\perl.exe" call:installPerl
 
 :: Fail if installation fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%

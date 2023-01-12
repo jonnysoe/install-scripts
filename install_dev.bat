@@ -720,7 +720,7 @@ exit /b %ERRORLEVEL%
 :: ===================================================================
 :installConfigEigen
 
-set EIGEN_FULLPATH=%ProgramFiles%\eigen
+set EIGEN_FULLPATH=%ProgramFiles%\CMake\share\eigen3
 
 if not exist "%EIGEN_FULLPATH%" call:installEigen
 

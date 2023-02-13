@@ -657,14 +657,31 @@ exit /b %ERRORLEVEL%
 
 :installFlexBison
 echo Downloading Flex/Bison . . .
-call:download "https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip" win_flex_bison.zip
+call:download "https://github.com/jonnysoe/winflexbison/archive/refs/heads/main.zip" winflexbison.zip
 
 :: Fail if download fails
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Install
 echo Installing Flex/Bison . . .
-if not exist "%ProgramFiles%\win_flex_bison" call "%SZ_EXE%" x win_flex_bison.zip -o"%ProgramFiles%\win_flex_bison"
+
+:: Extract
+if not exist winflexbison call "%SZ_EXE%" x winflexbison.zip -o"winflexbison"
+
+:: Fail if extraction fails
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+
+:: Build Flex/Bison
+pushd winflexbison\winflexbison-main
+if not exist build call build.bat
+popd
+
+:: Failed to build Flex/Bison
+if not exist winflexbison\winflexbison-main\build\win_flex_bison-main.zip exit /b 1
+
+:: Install
+echo Installing Flex/Bison . . .
+call "%SZ_EXE%" x winflexbison\winflexbison-main\build\win_flex_bison.zip -o"%ProgramFiles%\win_flex_bison"
 
 exit /b %ERRORLEVEL%
 

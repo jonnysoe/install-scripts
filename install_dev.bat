@@ -58,6 +58,7 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 :: Make a developer directory
 mkdir "%USERPROFILE%\_dev" > nul 2>&1
+type nul > nul
 
 call:installConfig7z
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%

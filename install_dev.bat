@@ -274,6 +274,12 @@ set TEMP=
 for /f "tokens=* USEBACKQ" %%A in (`git config --global pull.rebase ^| findstr true`) do set TEMP=%%A
 if %ERRORLEVEL% neq 0 call git config --global pull.rebase true
 
+:: Long Path Support
+:: https://stackoverflow.com/a/22831095/19336104
+set TEMP=
+for /f "tokens=* USEBACKQ" %%A in (`git config --global core.longpaths ^| findstr true`) do set TEMP=%%A
+if %ERRORLEVEL% neq 0 call git config --global core.longpaths true
+
 :: Generate SSH Key
 call "%PROGRAMFILES%\Git\bin\sh.exe" --login -c "[[ -f ~/.ssh/id_rsa.pub ]] || ssh-keygen -q -t rsa -N '' <<< \"\"$'\n'\"y\" 2>&1 >/dev/null"
 

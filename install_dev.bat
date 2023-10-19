@@ -888,7 +888,10 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 :: - Need to add "call" as npm/npx will invoke another process, executing them without "call" will not return control
 ::   https://stackoverflow.com/a/42306073/19336104
 :: - Do not add yo and generator-code as they will invoke another process which will call Node with outdated PATH
-call npm install -g yarn npm@latest
+:: - NPM v10 dropped support for node v16
+::   https://github.com/npm/cli/blob/v9.9.0/package.json#L264
+::   https://github.com/npm/cli/blob/v10.0.0/package.json#L257
+call npm install -g yarn npm@9.9.0
 call npx yarn global add @vscode/vsce
 
 exit /b %ERRORLEVEL%

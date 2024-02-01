@@ -4,15 +4,19 @@ function add_path() {
     local PATH_NAME=${1}
     local PATH_STRING=${2}
     # Indirect parameter expansion to test out environment variable passed in by caller.
+    # eg. When JAVA_HOME was passed in, it is equivalent to evaluating ${JAVA_HOME}
     # https://stackoverflow.com/a/1921337/19336104
     if [[ -z ${!PATH_NAME} ]]; then
-        # Reference: https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/
-        if [[ ! -f /etc/profile.d/custom.sh ]] || \
-            [[ "`grep ${PATH_NAME} /etc/profile.d/custom.sh`" != "${PATH_STRING}" ]]
-        then
+        # Add to system-wide bashrc
+        # https://askubuntu.com/a/503222
+        # /etc/bash.bashrc is the preferred method over /etc/profile.d
+        # /etc/bash.bashrc will run everytime a user launch the terminal
+        # /etc/profile.d only runs upon login
+        if [[ ! -f /etc/bash.bashrc ]] || \
+            [[ -z "`grep ${PATH_NAME} /etc/bash.bashrc | grep ${PATH_STRING}`" ]]; then
             local LINE="export ${PATH_NAME}=${PATH_STRING}"
-            sudo sh -c "echo $LINE >> /etc/profile.d/custom.sh"
-            echo "Appended ${PATH_NAME} to /etc/profile.d/custom.sh, restart to take effect."
+            sudo sh -c "echo $LINE >> /etc/bash.bashrc"
+            echo "Appended ${PATH_NAME} to /etc/bash.bashrc."
         fi
     fi
 }
